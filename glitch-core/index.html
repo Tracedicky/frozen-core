@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#02040a" />
+  <title>Frozen Core — Corsair 5400 Cryogenic Display</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ice: #effeff;
+      --cyan: #68f5ff;
+      --blue: #2580ff;
+      --deep-blue: #071b3d;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #02040a;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      font-family: system-ui, sans-serif;
+    }
+
+    #stage {
+      position: relative;
+      width: min(100vw, 100vh);
+      height: min(100vw, 100vh);
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 50% 48%, rgba(44, 104, 255, .13), transparent 38%),
+        radial-gradient(circle at 50% 50%, #071022 0%, #02040a 68%, #000 100%);
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      image-rendering: auto;
+    }
+
+    #frostEdges,
+    #condensation,
+    #coldMist,
+    #lensGlow,
+    #vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    #frostEdges {
+      z-index: 6;
+      opacity: .76;
+      mix-blend-mode: screen;
+      background:
+        radial-gradient(ellipse at 4% 4%, rgba(240,254,255,.84) 0 1.2%, rgba(131,235,255,.34) 4%, transparent 16%),
+        radial-gradient(ellipse at 96% 5%, rgba(240,254,255,.72) 0 1%, rgba(99,213,255,.28) 4%, transparent 17%),
+        radial-gradient(ellipse at 4% 96%, rgba(231,253,255,.76) 0 1.2%, rgba(83,192,255,.30) 5%, transparent 18%),
+        radial-gradient(ellipse at 96% 95%, rgba(240,254,255,.80) 0 1.1%, rgba(108,223,255,.31) 4%, transparent 17%),
+        linear-gradient(to bottom, rgba(224,252,255,.30), transparent 9%, transparent 91%, rgba(191,244,255,.28)),
+        linear-gradient(to right, rgba(207,249,255,.26), transparent 10%, transparent 90%, rgba(202,247,255,.24));
+      box-shadow:
+        inset 0 0 15px rgba(224,252,255,.34),
+        inset 0 0 42px rgba(49,157,255,.18),
+        inset 0 0 92px rgba(0,22,60,.30);
+      animation: frostBreathe 7.5s ease-in-out infinite;
+    }
+
+    #frostEdges::before,
+    #frostEdges::after {
+      content: '';
+      position: absolute;
+      inset: -3%;
+      opacity: .48;
+      background:
+        repeating-conic-gradient(from 8deg at 5% 8%, transparent 0 9deg, rgba(220,252,255,.16) 10deg 10.8deg, transparent 11.5deg 21deg),
+        repeating-conic-gradient(from 176deg at 95% 92%, transparent 0 11deg, rgba(146,233,255,.14) 12deg 12.8deg, transparent 13.5deg 24deg);
+      filter: blur(.35px);
+      animation: crystalShimmer 9s ease-in-out infinite;
+    }
+
+    #frostEdges::after {
+      transform: rotate(180deg) scale(.98);
+      opacity: .30;
+      animation-delay: -4.5s;
+    }
+
+    #condensation {
+      z-index: 5;
+      opacity: .34;
+      mix-blend-mode: screen;
+      background:
+        radial-gradient(circle at 13% 22%, rgba(255,255,255,.80) 0 .28%, rgba(125,226,255,.22) .55%, transparent 1.6%),
+        radial-gradient(circle at 84% 18%, rgba(255,255,255,.70) 0 .23%, rgba(125,226,255,.18) .52%, transparent 1.45%),
+        radial-gradient(circle at 8% 68%, rgba(255,255,255,.66) 0 .20%, rgba(125,226,255,.17) .46%, transparent 1.3%),
+        radial-gradient(circle at 90% 76%, rgba(255,255,255,.72) 0 .24%, rgba(125,226,255,.19) .50%, transparent 1.4%),
+        radial-gradient(circle at 26% 94%, rgba(255,255,255,.60) 0 .18%, rgba(125,226,255,.15) .42%, transparent 1.2%);
+      animation: condensationDrift 12s ease-in-out infinite;
+    }
+
+    #coldMist {
+      z-index: 4;
+      opacity: .58;
+      mix-blend-mode: screen;
+      background:
+        radial-gradient(ellipse at 22% 106%, rgba(194,248,255,.20), transparent 38%),
+        radial-gradient(ellipse at 77% 103%, rgba(80,177,255,.18), transparent 42%),
+        radial-gradient(ellipse at 50% -10%, rgba(188,247,255,.10), transparent 34%);
+      filter: blur(8px);
+      animation: mistDrift 8s ease-in-out infinite;
+    }
+
+    #lensGlow {
+      z-index: 7;
+      opacity: .62;
+      mix-blend-mode: screen;
+      background:
+        radial-gradient(circle at 50% 50%, transparent 49%, rgba(104,245,255,.032) 62%, transparent 73%),
+        radial-gradient(circle at 50% 50%, transparent 63%, rgba(37,128,255,.028) 79%, transparent 90%);
+      animation: lensBreathe 6.2s ease-in-out infinite;
+    }
+
+    #vignette {
+      z-index: 8;
+      background:
+        radial-gradient(circle at center, transparent 48%, rgba(0,0,0,.24) 76%, rgba(0,0,0,.78) 100%),
+        linear-gradient(90deg, rgba(0,0,0,.20), transparent 12%, transparent 88%, rgba(0,0,0,.20));
+    }
+
+    @keyframes frostBreathe {
+      0%, 100% { opacity: .66; filter: brightness(.92); }
+      50% { opacity: .88; filter: brightness(1.10); }
+    }
+
+    @keyframes crystalShimmer {
+      0%, 100% { opacity: .28; transform: scale(1) rotate(0deg); }
+      50% { opacity: .58; transform: scale(1.012) rotate(.45deg); }
+    }
+
+    @keyframes condensationDrift {
+      0%, 100% { transform: translate3d(0,0,0); opacity: .26; }
+      50% { transform: translate3d(0,1.4%,0); opacity: .42; }
+    }
+
+    @keyframes mistDrift {
+      0%, 100% { transform: translate3d(-2%,1%,0) scale(1.02); }
+      50% { transform: translate3d(2%,-1%,0) scale(1.08); }
+    }
+
+    @keyframes lensBreathe {
+      0%, 100% { transform: scale(1); opacity: .48; }
+      50% { transform: scale(1.025); opacity: .72; }
+    }
+  </style>
+</head>
+<body>
+  <main id="stage" aria-label="Animated premium cryogenic cooler display">
+    <canvas id="display"></canvas>
+    <div id="coldMist"></div>
+    <div id="condensation"></div>
+    <div id="frostEdges"></div>
+    <div id="lensGlow"></div>
+    <div id="vignette"></div>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const stage = document.getElementById('stage');
+      const canvas = document.getElementById('display');
+      const screenCtx = canvas.getContext('2d', { alpha: false });
+
+      const sceneCanvas = document.createElement('canvas');
+      const warpCanvas = document.createElement('canvas');
+      const ctx = sceneCanvas.getContext('2d', { alpha: false });
+      const warpCtx = warpCanvas.getContext('2d', { alpha: false });
+
+      const DPR_LIMIT = 1.75;
+      const LENS_BANDS = 72;
+      const BASE_LENS = 0.085;
+      const LENS_BREATH = 0.014;
+
+      let dpr = 1;
+      let size = 480;
+      let last = performance.now();
+      let seed = 1337;
+
+      const particles = Array.from({ length: 86 }, (_, i) => ({
+        a: Math.random() * Math.PI * 2,
+        r: 78 + Math.random() * 170,
+        s: 0.04 + Math.random() * 0.16,
+        z: .3 + Math.random() * 1.1,
+        l: 4 + Math.random() * 14,
+        c: i % 6 === 0 ? 1 : 0
+      }));
+
+      const bubbles = Array.from({ length: 68 }, () => ({
+        x: 0,
+        y: 0,
+        r: 0,
+        speed: 0,
+        drift: 0,
+        wobble: 0,
+        alpha: 0,
+        tint: 0
+      }));
+
+      function rand() {
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        return seed / 4294967296;
+      }
+
+      function resetBubble(b, initial = false) {
+        const spread = 210;
+        b.x = (rand() - .5) * spread;
+        b.y = initial ? (rand() * 430 - 215) : 228 + rand() * 52;
+        b.r = 1.4 + rand() * 8.6;
+        b.speed = .32 + rand() * .72;
+        b.drift = .30 + rand() * 1.30;
+        b.wobble = rand() * Math.PI * 2;
+        b.alpha = .12 + rand() * .43;
+        b.tint = rand();
+      }
+
+      function configureCanvas(target, targetCtx) {
+        target.width = Math.floor(size * dpr);
+        target.height = Math.floor(size * dpr);
+        targetCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        targetCtx.imageSmoothingEnabled = true;
+        targetCtx.imageSmoothingQuality = 'high';
+      }
+
+      function resize() {
+        const rect = stage.getBoundingClientRect();
+        size = Math.max(1, Math.floor(Math.min(rect.width, rect.height)));
+        dpr = Math.min(window.devicePixelRatio || 1, DPR_LIMIT);
+        configureCanvas(canvas, screenCtx);
+        configureCanvas(sceneCanvas, ctx);
+        configureCanvas(warpCanvas, warpCtx);
+      }
+
+      function line(x1, y1, x2, y2, width, stroke, alpha = 1) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = width;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function polygon(points, fill, stroke, glow = 0) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(points[0][0], points[0][1]);
+        for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+        ctx.closePath();
+        if (glow) {
+          ctx.shadowBlur = glow;
+          ctx.shadowColor = stroke || fill;
+        }
+        if (fill) {
+          ctx.fillStyle = fill;
+          ctx.fill();
+        }
+        if (stroke) {
+          ctx.strokeStyle = stroke;
+          ctx.lineWidth = 1.15;
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawBackground(t, cx, cy, scale) {
+        ctx.fillStyle = '#02040a';
+        ctx.fillRect(0, 0, size, size);
+
+        const g = ctx.createRadialGradient(cx, cy, 10, cx, cy, size * .68);
+        g.addColorStop(0, 'rgba(15,54,95,.42)');
+        g.addColorStop(.30, 'rgba(7,21,45,.46)');
+        g.addColorStop(.72, 'rgba(2,6,15,.88)');
+        g.addColorStop(1, '#010206');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, size, size);
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(-t * .018);
+        ctx.globalAlpha = .19;
+        for (let i = 0; i < 32; i++) {
+          const a = i / 32 * Math.PI * 2;
+          const len = size * (.34 + ((i * 19) % 7) * .018);
+          line(Math.cos(a) * 60 * scale, Math.sin(a) * 60 * scale,
+               Math.cos(a) * len, Math.sin(a) * len, .55,
+               i % 7 === 0 ? '#effeff' : '#2580ff', .48);
+        }
+        ctx.restore();
+      }
+
+      function drawParticles(t, cx, cy, scale) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.globalCompositeOperation = 'lighter';
+        for (const p of particles) {
+          const a = p.a + t * p.s;
+          const pulse = .72 + Math.sin(t * 2.2 + p.a * 4) * .28;
+          const r = p.r * scale + Math.sin(t * .9 + p.a * 3) * 4 * scale;
+          const x = Math.cos(a) * r;
+          const y = Math.sin(a) * r * .92;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(a + Math.PI / 2);
+          ctx.fillStyle = p.c
+            ? `rgba(239,254,255,${.14 + pulse * .30})`
+            : `rgba(104,245,255,${.12 + pulse * .34})`;
+          ctx.fillRect(-p.l * scale * .5, -p.z * scale * .5, p.l * scale, p.z * scale);
+          ctx.restore();
+        }
+        ctx.restore();
+      }
+
+      function drawRings(t, cx, cy, scale) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.globalCompositeOperation = 'lighter';
+
+        const ringDefs = [
+          { r: 159, w: 7,   a: .63, s:  .18, c: '#4ffcff' },
+          { r: 142, w: 2.2, a: .52, s: -.28, c: '#1b75ff' },
+          { r: 123, w: 1.1, a: .46, s:  .41, c: '#effeff' },
+          { r: 105, w: 4.6, a: .42, s: -.13, c: '#2580ff' }
+        ];
+
+        for (let ri = 0; ri < ringDefs.length; ri++) {
+          const rd = ringDefs[ri];
+          const count = 36 - ri * 5;
+          ctx.save();
+          ctx.rotate(t * rd.s);
+          for (let i = 0; i < count; i++) {
+            const a = i / count * Math.PI * 2;
+            const wobble = Math.sin(t * 1.7 + i * 1.73 + ri) * .018;
+            const seg = .055 + ((i * 7 + ri * 5) % 8) * .012;
+            const r = (rd.r + Math.sin(t * 1.4 + i) * 1.7) * scale;
+            ctx.beginPath();
+            ctx.arc(0, 0, r, a + wobble, a + seg + wobble);
+            ctx.lineWidth = rd.w * scale;
+            ctx.strokeStyle = rd.c;
+            ctx.globalAlpha = rd.a * (.65 + .35 * Math.sin(t * 2.1 + i * .91));
+            ctx.shadowBlur = ri === 0 ? 12 * scale : 5 * scale;
+            ctx.shadowColor = rd.c;
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        for (let i = 0; i < 28; i++) {
+          const a = i / 28 * Math.PI * 2 + t * .045;
+          const flicker = .45 + .55 * Math.sin(t * 3.4 + i * 2.1);
+          const r1 = (167 + (i % 4) * 3) * scale;
+          const r2 = (178 + (i % 7) * 5 + flicker * 8) * scale;
+          line(Math.cos(a) * r1, Math.sin(a) * r1,
+               Math.cos(a) * r2, Math.sin(a) * r2,
+               (i % 5 === 0 ? 2.2 : .8) * scale,
+               i % 6 === 0 ? '#effeff' : '#68f5ff',
+               .22 + flicker * .42);
+        }
+
+        ctx.restore();
+      }
+
+      function roundRectPath(x, y, w, h, r) {
+        const rr = Math.min(r, w * .5, h * .5);
+        ctx.beginPath();
+        ctx.moveTo(x + rr, y);
+        ctx.arcTo(x + w, y, x + w, y + h, rr);
+        ctx.arcTo(x + w, y + h, x, y + h, rr);
+        ctx.arcTo(x, y + h, x, y, rr);
+        ctx.arcTo(x, y, x + w, y, rr);
+        ctx.closePath();
+      }
+
+      function drawCryoChamber(t, cx, cy, scale) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+
+        // Open central coolant glow — no box, capsule or visible chamber walls.
+        const aura = ctx.createRadialGradient(
+          cx, cy + 18 * scale, 12 * scale,
+          cx, cy, 205 * scale
+        );
+        aura.addColorStop(0, 'rgba(176,247,255,.085)');
+        aura.addColorStop(.24, 'rgba(94,218,255,.12)');
+        aura.addColorStop(.50, 'rgba(42,143,255,.10)');
+        aura.addColorStop(.74, 'rgba(37,128,255,.045)');
+        aura.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = aura;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 8 * scale, 184 * scale, 198 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wide, soft coolant column that fades naturally into the background.
+        const coolant = ctx.createLinearGradient(
+          cx, cy - 225 * scale,
+          cx, cy + 225 * scale
+        );
+        coolant.addColorStop(0, 'rgba(255,255,255,0)');
+        coolant.addColorStop(.12, 'rgba(167,242,255,.035)');
+        coolant.addColorStop(.36, 'rgba(86,200,255,.075)');
+        coolant.addColorStop(.64, 'rgba(52,144,255,.065)');
+        coolant.addColorStop(.88, 'rgba(161,236,255,.025)');
+        coolant.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = coolant;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 10 * scale, 118 * scale, 225 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Gentle rising energy strands to give the centre depth without enclosing it.
+        for (let i = 0; i < 10; i++) {
+          const baseX = (-96 + i * 21) * scale;
+          const sway = Math.sin(t * (0.75 + i * .035) + i * 1.17) * (8 + (i % 3) * 3) * scale;
+          const phase = ((t * (24 + i * 1.8) + i * 29) % 430) - 215;
+          const y1 = cy + phase * scale;
+          const y2 = y1 - (72 + (i % 4) * 18) * scale;
+
+          const strand = ctx.createLinearGradient(cx + baseX, y1, cx + baseX + sway, y2);
+          strand.addColorStop(0, 'rgba(255,255,255,0)');
+          strand.addColorStop(.38, i % 4 === 0 ? 'rgba(239,254,255,.060)' : 'rgba(119,226,255,.055)');
+          strand.addColorStop(.62, i % 4 === 0 ? 'rgba(239,254,255,.105)' : 'rgba(190,247,255,.095)');
+          strand.addColorStop(1, 'rgba(255,255,255,0)');
+
+          ctx.strokeStyle = strand;
+          ctx.lineWidth = (i % 3 === 0 ? 1.35 : .8) * scale;
+          ctx.beginPath();
+          ctx.moveTo(cx + baseX, y1);
+          ctx.quadraticCurveTo(
+            cx + baseX + sway,
+            (y1 + y2) * .5,
+            cx + baseX - sway * .35,
+            y2
+          );
+          ctx.stroke();
+        }
+
+        // Free-floating bubbles across the whole centre, never clipped to a shape.
+        for (const b of bubbles) {
+          b.y -= b.speed * (1 + Math.sin(t * 1.05 + b.wobble) * .16) * 1.9 * scale;
+          if (b.y < -238) resetBubble(b, false);
+
+          const bx = cx + b.x * scale + Math.sin(t * b.drift + b.wobble) * 14 * scale;
+          const by = cy + b.y * scale + Math.cos(t * 1.65 + b.wobble) * 2.1 * scale;
+          const br = b.r * scale * (0.92 + Math.sin(t * 1.8 + b.wobble) * .1);
+
+          ctx.save();
+          ctx.globalAlpha = b.alpha;
+
+          const bg = ctx.createRadialGradient(
+            bx - br * .34, by - br * .34, br * .12,
+            bx, by, br * 1.28
+          );
+
+          if (b.tint > .78) {
+            bg.addColorStop(0, 'rgba(255,255,255,.98)');
+            bg.addColorStop(.27, 'rgba(210,250,255,.25)');
+            bg.addColorStop(1, 'rgba(210,250,255,0)');
+          } else {
+            bg.addColorStop(0, 'rgba(255,255,255,.97)');
+            bg.addColorStop(.25, 'rgba(150,238,255,.28)');
+            bg.addColorStop(1, 'rgba(150,238,255,0)');
+          }
+
+          ctx.fillStyle = bg;
+          ctx.beginPath();
+          ctx.arc(bx, by, br, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = b.tint > .78
+            ? 'rgba(239,254,255,.42)'
+            : 'rgba(223,252,255,.46)';
+          ctx.lineWidth = Math.max(.65, br * .105);
+          ctx.beginPath();
+          ctx.arc(bx, by, br * .76, Math.PI * 1.04, Math.PI * 1.91);
+          ctx.stroke();
+
+          ctx.restore();
+        }
+
+        // Soft vapour bed at the bottom, also fully open and unboxed.
+        const floorMist = ctx.createRadialGradient(
+          cx, cy + 160 * scale, 4 * scale,
+          cx, cy + 160 * scale, 145 * scale
+        );
+        floorMist.addColorStop(0, 'rgba(177,244,255,.09)');
+        floorMist.addColorStop(.42, 'rgba(76,174,255,.045)');
+        floorMist.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = floorMist;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 160 * scale, 138 * scale, 41 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      function applyLensDistortion(t) {
+        const breath = Math.sin(t * 1.18) * LENS_BREATH;
+        const strength = BASE_LENS + breath;
+        const band = size / LENS_BANDS;
+        const glassWobble = .28;
+
+        warpCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        warpCtx.globalCompositeOperation = 'source-over';
+        warpCtx.globalAlpha = 1;
+        warpCtx.fillStyle = '#02040a';
+        warpCtx.fillRect(0, 0, size, size);
+
+        for (let i = 0; i < LENS_BANDS; i++) {
+          const y = i * band;
+          const h = band + 1.25;
+          const ny = ((y + band * .5) - size * .5) / (size * .5);
+          const curve = Math.max(0, 1 - ny * ny);
+          const widthScale = 1 + strength * curve;
+          const destW = size * widthScale;
+          const wobble = Math.sin(t * .72 + ny * 5.2) * glassWobble * curve;
+          const dx = (size - destW) * .5 + wobble;
+
+          warpCtx.drawImage(
+            sceneCanvas,
+            0, Math.floor(y * dpr), sceneCanvas.width, Math.ceil(h * dpr),
+            dx, y, destW, h
+          );
+        }
+
+        screenCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        screenCtx.globalCompositeOperation = 'source-over';
+        screenCtx.globalAlpha = 1;
+        screenCtx.fillStyle = '#02040a';
+        screenCtx.fillRect(0, 0, size, size);
+
+        for (let i = 0; i < LENS_BANDS; i++) {
+          const x = i * band;
+          const w = band + 1.25;
+          const nx = ((x + band * .5) - size * .5) / (size * .5);
+          const curve = Math.max(0, 1 - nx * nx);
+          const heightScale = 1 + strength * curve;
+          const destH = size * heightScale;
+          const wobble = Math.cos(t * .61 + nx * 4.8) * glassWobble * curve;
+          const dy = (size - destH) * .5 + wobble;
+
+          screenCtx.drawImage(
+            warpCanvas,
+            Math.floor(x * dpr), 0, Math.ceil(w * dpr), warpCanvas.height,
+            x, dy, w, destH
+          );
+        }
+
+        screenCtx.save();
+        screenCtx.globalCompositeOperation = 'screen';
+        screenCtx.globalAlpha = .22;
+        const rim = screenCtx.createRadialGradient(
+          size * .5, size * .5, size * .31,
+          size * .5, size * .5, size * .56
+        );
+        rim.addColorStop(0, 'rgba(0,0,0,0)');
+        rim.addColorStop(.58, 'rgba(79,252,255,.025)');
+        rim.addColorStop(.79, 'rgba(37,128,255,.042)');
+        rim.addColorStop(1, 'rgba(0,0,0,0)');
+        screenCtx.fillStyle = rim;
+        screenCtx.fillRect(0, 0, size, size);
+        screenCtx.restore();
+      }
+
+      const frostCrystals = Array.from({ length: 52 }, (_, i) => {
+        const side = i % 4;
+        const along = rand();
+        const depth = 5 + rand() * 23;
+        let x, y, angle;
+        if (side === 0) { x = along * 480; y = depth; angle = Math.PI * .5; }
+        else if (side === 1) { x = 480 - depth; y = along * 480; angle = Math.PI; }
+        else if (side === 2) { x = along * 480; y = 480 - depth; angle = -Math.PI * .5; }
+        else { x = depth; y = along * 480; angle = 0; }
+        return {
+          x, y, angle,
+          len: 7 + rand() * 20,
+          branches: 2 + Math.floor(rand() * 3),
+          phase: rand() * Math.PI * 2,
+          alpha: .10 + rand() * .24
+        };
+      });
+
+      function drawScreenFrost(t, scale) {
+        screenCtx.save();
+        screenCtx.globalCompositeOperation = 'screen';
+        screenCtx.lineCap = 'round';
+
+        for (const f of frostCrystals) {
+          const shimmer = .62 + Math.sin(t * .72 + f.phase) * .38;
+          const x = f.x * scale;
+          const y = f.y * scale;
+          const len = f.len * scale;
+          const dx = Math.cos(f.angle) * len;
+          const dy = Math.sin(f.angle) * len;
+
+          screenCtx.strokeStyle = `rgba(224,252,255,${f.alpha * shimmer})`;
+          screenCtx.lineWidth = Math.max(.45, .72 * scale);
+          screenCtx.shadowBlur = 4 * scale;
+          screenCtx.shadowColor = 'rgba(104,245,255,.55)';
+          screenCtx.beginPath();
+          screenCtx.moveTo(x, y);
+          screenCtx.lineTo(x + dx, y + dy);
+          screenCtx.stroke();
+
+          for (let b = 1; b <= f.branches; b++) {
+            const p = b / (f.branches + 1);
+            const bx = x + dx * p;
+            const by = y + dy * p;
+            const bl = len * (.18 + .08 * b);
+            const spread = .62;
+            for (const sign of [-1, 1]) {
+              const a = f.angle + sign * spread;
+              screenCtx.beginPath();
+              screenCtx.moveTo(bx, by);
+              screenCtx.lineTo(bx - Math.cos(a) * bl, by - Math.sin(a) * bl);
+              screenCtx.stroke();
+            }
+          }
+        }
+
+        const haze = screenCtx.createRadialGradient(
+          size * .5, size * .5, size * .39,
+          size * .5, size * .5, size * .71
+        );
+        haze.addColorStop(0, 'rgba(0,0,0,0)');
+        haze.addColorStop(.67, 'rgba(154,237,255,.018)');
+        haze.addColorStop(.88, 'rgba(222,252,255,.075)');
+        haze.addColorStop(1, 'rgba(255,255,255,.12)');
+        screenCtx.fillStyle = haze;
+        screenCtx.fillRect(0, 0, size, size);
+        screenCtx.restore();
+      }
+
+      function draw(tms) {
+        const dt = Math.min(40, tms - last);
+        last = tms;
+        const t = tms / 1000;
+        const scale = size / 480;
+        const cx = size / 2;
+        const cy = size / 2;
+
+
+        drawBackground(t, cx, cy, scale);
+        drawParticles(t, cx, cy, scale);
+        drawRings(t, cx, cy, scale);
+        drawCryoChamber(t, cx, cy, scale);
+        applyLensDistortion(t);
+        drawScreenFrost(t, scale);
+
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', resize, { passive: true });
+      document.addEventListener('visibilitychange', () => {
+        last = performance.now();
+      });
+
+      for (const b of bubbles) resetBubble(b, true);
+      resize();
+      requestAnimationFrame(draw);
+    })();
+  </script>
+</body>
+</html>
