@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#07111f">
+<title>Marco 10X: Ultimate AI Artist</title>
+<link rel="stylesheet" href="style.css">
+</head><body>
+<div id="wrap"><div id="frame">
+<canvas id="game" width="1080" height="680" aria-label="Marco 10X arcade game"></canvas>
+<div id="hud">
+ <div class="hudBox"><div class="label">Artistic output</div><div class="value" id="score">000000</div></div>
+ <div id="titleMini">MARCO // LATENT SPACE</div>
+ <div class="hudBox" id="rightHud"><div class="label">Lives / combo</div><div class="value"><span id="lives">♥♥♥</span> · <span id="combo">0X</span></div></div>
+</div>
+<div id="pun">PROMPT AND CIRCUMSTANCE!</div>
+<div id="modeText">10X ARTIST METER</div><div id="modeBar"><div id="modeFill"></div></div>
+<button id="sound" aria-label="Toggle sound">♪</button>
+<div id="touch"><div class="touchSide"><button class="touchBtn" id="left">◀</button><button class="touchBtn" id="right">▶</button></div><button class="touchBtn fire" id="fire">10X</button></div>
+<div class="overlay" id="start"><div class="card">
+ <h1 class="logo">MARCO 10X<em>ULTIMATE AI ARTIST</em></h1>
+ <p class="tagline">Catch brilliant prompts. Delete bad takes. Blast the giant <b>AI EGO</b>. Become ten times the artist with roughly one tenth of the brushwork.</p>
+ <div class="instructions"><span class="key">A / D or ← / → MOVE</span><span class="key">SPACE / CLICK BLAST</span><span class="key">Collect ✦ PROMPTS</span><span class="key">Avoid MID</span></div>
+ <button id="startBtn">Generate Greatness</button><div class="small">Warning: may contain excessive upscaling, unstable diffusion and model behaviour.</div>
+</div></div>
+<div class="overlay hidden" id="over"><div class="card">
+ <h2 class="logo" style="font-size:clamp(38px,7vw,70px)">RENDER FAILED<em id="finalTitle">THE EGO WON</em></h2>
+ <p class="tagline" id="finalText"></p><button id="againBtn">Regenerate Marco</button>
+</div></div>
+</div></div>
+<script src="face.js"></script>
+<script src="game.js"></script>
+</body></html>
