@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#070709" />
+  <meta name="description" content="Marco Compiles Reality — a satirical developer short." />
+  <title>Marco Compiles Reality</title>
+  <style>
+    :root {
+      --ink: #f3f1e7;
+      --muted: #9e9b94;
+      --acid: #c8ff3d;
+      --pink: #ff3ca6;
+      --cyan: #51e7ff;
+      --orange: #ff7a34;
+      --black: #060608;
+      --panel: #111114;
+      --line: rgba(243, 241, 231, .18);
+      --film-time: 32s;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      min-height: 100%;
+      margin: 0;
+      background: #050507;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+
+    button { font: inherit; }
+
+    body {
+      display: grid;
+      min-height: 100dvh;
+      place-items: center;
+      padding: clamp(14px, 2.4vw, 34px);
+      background:
+        radial-gradient(circle at 16% 12%, rgba(255, 60, 166, .13), transparent 31%),
+        radial-gradient(circle at 88% 82%, rgba(81, 231, 255, .10), transparent 29%),
+        #050507;
+    }
+
+    .app {
+      width: min(1240px, 100%);
+    }
+
+    .masthead,
+    .control-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .masthead {
+      margin-bottom: 12px;
+      color: var(--muted);
+      font: 700 10px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--ink);
+    }
+
+    .brand-mark {
+      width: 10px;
+      height: 10px;
+      background: var(--acid);
+      border-radius: 50%;
+      box-shadow: 0 0 18px rgba(200, 255, 61, .8);
+    }
+
+    .film {
+      position: relative;
+      isolation: isolate;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .19);
+      border-radius: clamp(14px, 2vw, 24px);
+      background: #08080b;
+      box-shadow: 0 38px 100px rgba(0, 0, 0, .65), inset 0 0 80px rgba(0, 0, 0, .7);
+    }
+
+    .film::before,
+    .film::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      pointer-events: none;
+    }
+
+    .film::before {
+      opacity: .19;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.62'/%3E%3C/svg%3E");
+      mix-blend-mode: soft-light;
+      animation: grain .28s steps(2) infinite;
+    }
+
+    .film::after {
+      background:
+        linear-gradient(rgba(18, 16, 20, 0) 50%, rgba(0, 0, 0, .24) 50%),
+        radial-gradient(ellipse at center, transparent 46%, rgba(0, 0, 0, .66) 100%);
+      background-size: 100% 4px, 100% 100%;
+      opacity: .58;
+    }
+
+    .corner {
+      position: absolute;
+      z-index: 40;
+      top: 18px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: rgba(255,255,255,.62);
+      font: 700 clamp(7px, .75vw, 10px)/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .corner-left { left: 20px; }
+    .corner-right { right: 20px; }
+    .rec-dot { width: 7px; height: 7px; border-radius: 50%; background: #ff3b30; box-shadow: 0 0 12px #ff3b30; animation: blink 1s steps(1) infinite; }
+
+    .scene {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      opacity: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .playing .scene {
+      animation: scene var(--scene-duration) linear both;
+      animation-delay: var(--scene-delay);
+    }
+
+    .playing.paused *,
+    .playing.paused *::before,
+    .playing.paused *::after {
+      animation-play-state: paused !important;
+    }
+
+    .scene-boot {
+      --scene-delay: 0s;
+      --scene-duration: 4.7s;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(200, 255, 61, .1), transparent 34%),
+        #08080a;
+    }
+
+    .boot-stack {
+      width: min(780px, 76%);
+      text-align: center;
+    }
+
+    .eyebrow {
+      margin: 0 0 clamp(10px, 1.6vw, 20px);
+      color: var(--acid);
+      font: 800 clamp(8px, 1vw, 13px)/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, p { margin-top: 0; }
+
+    h1 {
+      margin-bottom: clamp(12px, 1.8vw, 22px);
+      font-size: clamp(34px, 7.4vw, 112px);
+      line-height: .82;
+      letter-spacing: -.075em;
+      text-transform: uppercase;
+    }
+
+    .boot-copy {
+      color: var(--muted);
+      font: 600 clamp(10px, 1.2vw, 16px)/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .cursor { color: var(--acid); animation: blink .65s steps(1) infinite; }
+
+    .scene-thesis {
+      --scene-delay: 4.1s;
+      --scene-duration: 5.9s;
+      justify-items: start;
+      padding: 9%;
+      background:
+        linear-gradient(116deg, rgba(255, 60, 166, .18), transparent 42%),
+        #0b0a0d;
+    }
+
+    .giant-num {
+      position: absolute;
+      right: 4%;
+      bottom: -21%;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(255,255,255,.12);
+      font-size: clamp(180px, 37vw, 560px);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -.1em;
+      transform: rotate(-8deg);
+    }
+
+    .thesis {
+      position: relative;
+      z-index: 2;
+      max-width: 820px;
+      font-size: clamp(25px, 5vw, 76px);
+      font-weight: 850;
+      line-height: .96;
+      letter-spacing: -.055em;
+      text-transform: uppercase;
+    }
+
+    .thesis em { color: var(--pink); font-style: normal; }
+
+    .scene-rig {
+      --scene-delay: 9.4s;
+      --scene-duration: 7.1s;
+      background:
+        radial-gradient(circle at 62% 52%, rgba(255, 122, 52, .18), transparent 28%),
+        linear-gradient(130deg, #09090c 0 45%, #111015 45%);
+    }
+
+    .rig-grid {
+      display: grid;
+      width: 82%;
+      grid-template-columns: .85fr 1.15fr;
+      align-items: center;
+      gap: 7%;
+    }
+
+    .rig-copy h2,
+    .scene-benchmark h2 {
+      margin-bottom: 14px;
+      font-size: clamp(26px, 5vw, 76px);
+      line-height: .91;
+      letter-spacing: -.06em;
+      text-transform: uppercase;
+    }
+
+    .rig-copy p {
+      max-width: 480px;
+      color: var(--muted);
+      font: 650 clamp(9px, 1.25vw, 16px)/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .scrap-rig {
+      position: relative;
+      height: clamp(180px, 31vw, 420px);
+      transform: rotate(2deg);
+    }
+
+    .case {
+      position: absolute;
+      inset: 7% 12% 8% 10%;
+      border: clamp(4px, .8vw, 10px) solid #79736a;
+      border-radius: 8px 22px 10px 8px;
+      background:
+        linear-gradient(90deg, transparent 47%, rgba(255,255,255,.08) 48% 50%, transparent 51%),
+        linear-gradient(18deg, #242228, #100f13);
+      box-shadow: inset 0 0 0 2px #201d1d, 25px 30px 60px rgba(0,0,0,.45);
+    }
+
+    .fan {
+      position: absolute;
+      top: 19%;
+      right: 21%;
+      width: 30%;
+      aspect-ratio: 1;
+      border: 4px solid #4e4b4a;
+      border-radius: 50%;
+      background: conic-gradient(from 10deg, var(--orange), #2b2423 12%, var(--orange) 20%, #2b2423 31%, var(--orange) 42%, #2b2423 54%, var(--orange) 66%, #2b2423 78%, var(--orange) 90%, #2b2423);
+      box-shadow: 0 0 30px rgba(255, 122, 52, .25);
+      animation: spin .65s linear infinite;
+    }
+
+    .brick {
+      position: absolute;
+      left: 18%;
+      top: 26%;
+      width: 26%;
+      height: 16%;
+      border: 2px solid #8c394f;
+      background: repeating-linear-gradient(0deg, #6f273c 0 8px, #50202e 8px 10px);
+      transform: rotate(-3deg);
+    }
+
+    .cable {
+      position: absolute;
+      border: 5px solid var(--c);
+      border-left: 0;
+      border-bottom: 0;
+      border-radius: 0 60px 0 0;
+      filter: drop-shadow(0 0 5px color-mix(in srgb, var(--c), transparent 35%));
+    }
+    .c1 { --c: var(--pink); width: 52%; height: 48%; top: 2%; left: -1%; transform: rotate(8deg); }
+    .c2 { --c: var(--cyan); width: 42%; height: 70%; right: 0; bottom: -8%; transform: rotate(158deg); }
+    .c3 { --c: var(--acid); width: 36%; height: 30%; left: 22%; bottom: 0; transform: rotate(201deg); }
+
+    .duct-tape {
+      position: absolute;
+      left: 40%;
+      top: 2%;
+      width: 16%;
+      height: 96%;
+      background: repeating-linear-gradient(90deg, rgba(210,210,205,.72) 0 7px, rgba(130,130,127,.8) 7px 9px);
+      opacity: .58;
+      transform: rotate(-9deg);
+      mix-blend-mode: screen;
+    }
+
+    .scene-terminal {
+      --scene-delay: 15.7s;
+      --scene-duration: 7.7s;
+      background: #08090b;
+    }
+
+    .terminal {
+      width: 84%;
+      height: 73%;
+      overflow: hidden;
+      border: 1px solid rgba(200, 255, 61, .34);
+      border-radius: 12px;
+      background: rgba(5, 7, 6, .91);
+      box-shadow: 0 0 70px rgba(200, 255, 61, .09);
+    }
+
+    .terminal-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      color: var(--muted);
+      font: 700 clamp(7px, .8vw, 10px)/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .lights { display: flex; gap: 6px; }
+    .lights i { width: 7px; height: 7px; border-radius: 50%; background: #444; }
+    .lights i:nth-child(1) { background: var(--pink); }
+    .lights i:nth-child(2) { background: var(--orange); }
+    .lights i:nth-child(3) { background: var(--acid); }
+
+    .terminal-body {
+      padding: clamp(12px, 2.3vw, 30px);
+      color: #b7c5b0;
+      font: 600 clamp(7px, 1.12vw, 14px)/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .line {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    .playing .line { animation: type-in .16s steps(2) forwards; animation-delay: calc(16.1s + var(--i) * .42s); }
+    .prompt { color: var(--acid); }
+    .warn { color: var(--orange); }
+    .pink { color: var(--pink); }
+    .cyan { color: var(--cyan); }
+
+    .compile-meter {
+      position: relative;
+      width: 100%;
+      height: clamp(14px, 1.7vw, 22px);
+      margin: 16px 0 13px;
+      overflow: hidden;
+      border: 1px solid rgba(200,255,61,.33);
+      background: rgba(255,255,255,.04);
+    }
+
+    .compile-meter::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      width: 0;
+      background: repeating-linear-gradient(90deg, var(--acid) 0 11px, #9bc92b 11px 13px);
+    }
+    .playing .compile-meter::after { animation: compile 3.2s cubic-bezier(.3,.8,.2,1) forwards; animation-delay: 17.4s; }
+
+    .scene-benchmark {
+      --scene-delay: 22.6s;
+      --scene-duration: 5.9s;
+      padding: 7%;
+      place-items: stretch;
+      background:
+        linear-gradient(120deg, rgba(81,231,255,.16), transparent 40%),
+        #0b0b10;
+    }
+
+    .benchmark-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6%;
+      align-items: center;
+    }
+
+    .stat-stack { display: grid; gap: clamp(8px, 1.2vw, 14px); }
+    .stat {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: baseline;
+      padding: clamp(10px, 1.5vw, 18px);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.035);
+    }
+    .stat span { color: var(--muted); font: 700 clamp(7px, .9vw, 11px)/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .13em; text-transform: uppercase; }
+    .stat strong { color: var(--cyan); font-size: clamp(17px, 2.5vw, 34px); letter-spacing: -.04em; }
+
+    .stamp {
+      display: inline-block;
+      padding: 8px 11px;
+      border: 2px solid var(--pink);
+      color: var(--pink);
+      font: 900 clamp(8px, 1vw, 13px)/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      transform: rotate(-2deg);
+    }
+
+    .scene-final {
+      --scene-delay: 27.8s;
+      --scene-duration: 4.2s;
+      padding: 7%;
+      background:
+        radial-gradient(circle at 50% 44%, rgba(255,60,166,.22), transparent 27%),
+        linear-gradient(135deg, #09080b, #110b11);
+    }
+    .playing .scene-final { animation-name: final-scene; }
+
+    .final-stack { text-align: center; }
+    .final-kicker { color: var(--pink); }
+    .final-title {
+      margin: 0 auto 18px;
+      max-width: 1000px;
+      font-size: clamp(36px, 8.5vw, 126px);
+      line-height: .77;
+      letter-spacing: -.085em;
+      text-transform: uppercase;
+    }
+    .final-title span { color: var(--acid); }
+    .final-copy { margin: 0 auto; color: var(--muted); font: 700 clamp(9px, 1.2vw, 15px)/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+    .start-card {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      text-align: center;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255,60,166,.14), transparent 28%),
+        #08080b;
+      transition: opacity .45s ease, visibility .45s ease;
+    }
+
+    .playing .start-card { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    .start-card-inner { max-width: 720px; }
+    .pretitle { color: var(--pink); font: 800 clamp(8px, 1vw, 12px)/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .22em; text-transform: uppercase; }
+    .start-card h2 { margin: 14px 0 16px; font-size: clamp(34px, 7.4vw, 106px); line-height: .82; letter-spacing: -.075em; text-transform: uppercase; }
+    .start-card h2 span { color: var(--acid); }
+    .start-card p { margin: 0 auto 24px; max-width: 530px; color: var(--muted); font: 600 clamp(10px, 1.2vw, 15px)/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+    .primary-button,
+    .ghost-button {
+      border: 0;
+      cursor: pointer;
+      font: 850 clamp(9px, 1vw, 12px)/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      transition: transform .16s ease, background .16s ease, color .16s ease;
+    }
+
+    .primary-button {
+      padding: 14px 19px;
+      color: #0c0d08;
+      background: var(--acid);
+      box-shadow: 0 0 28px rgba(200,255,61,.2);
+    }
+
+    .primary-button:hover { transform: translateY(-2px) rotate(-1deg); }
+    .primary-button:focus-visible,
+    .ghost-button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
+
+    .control-strip {
+      margin-top: 12px;
+      min-height: 38px;
+      color: var(--muted);
+      font: 700 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .controls { display: flex; align-items: center; gap: 8px; }
+    .ghost-button { padding: 9px 11px; border: 1px solid var(--line); color: var(--muted); background: rgba(255,255,255,.025); }
+    .ghost-button:hover { border-color: rgba(255,255,255,.42); color: var(--ink); }
+    .shortcut { opacity: .62; }
+
+    .progress-track {
+      position: absolute;
+      z-index: 41;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: rgba(255,255,255,.08);
+    }
+    .progress {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--pink), var(--acid));
+      box-shadow: 0 0 12px rgba(200,255,61,.45);
+    }
+    .playing .progress { animation: progress var(--film-time) linear forwards; }
+
+    @keyframes scene {
+      0% { opacity: 0; transform: scale(1.035); }
+      8% { opacity: 1; }
+      82% { opacity: 1; }
+      100% { opacity: 0; transform: scale(1); }
+    }
+    @keyframes final-scene {
+      0% { opacity: 0; transform: scale(1.05); }
+      14% { opacity: 1; }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes type-in { to { opacity: 1; transform: none; } }
+    @keyframes compile { 0% { width: 0; } 24% { width: 18%; } 46% { width: 42%; } 68% { width: 69%; } 82% { width: 70%; } 100% { width: 100%; } }
+    @keyframes progress { to { width: 100%; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes blink { 50% { opacity: .18; } }
+    @keyframes grain { 0% { transform: translate(0); } 25% { transform: translate(-1.5%, 1%); } 50% { transform: translate(1%, -1.5%); } 75% { transform: translate(1.5%, 1.5%); } 100% { transform: translate(-1%, -1%); } }
+
+    @media (max-width: 720px) {
+      body { padding: 10px; align-content: center; }
+      .film { aspect-ratio: 9 / 13; }
+      .masthead .runtime, .shortcut { display: none; }
+      .scene-thesis, .scene-benchmark { padding: 10%; }
+      .rig-grid, .benchmark-grid { grid-template-columns: 1fr; gap: 18px; }
+      .scrap-rig { height: min(48vw, 250px); }
+      .rig-copy p { display: none; }
+      .terminal { width: 90%; height: 70%; }
+      .terminal-body { line-height: 1.75; }
+      .line:nth-child(n+8) { display: none; }
+      .benchmark-grid { align-content: center; }
+      .scene-benchmark h2 { margin-bottom: 4px; }
+      .stat-stack { gap: 7px; }
+      .stat { padding: 9px 11px; }
+      .control-strip { margin-top: 8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .film::before, .rec-dot, .cursor { animation: none; }
+      .primary-button, .ghost-button { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="masthead" aria-label="Film information">
+      <span class="brand"><i class="brand-mark"></i> Aven underground pictures</span>
+      <span class="runtime">A 32-second unlicensed documentary</span>
+    </header>
+
+    <section class="film" id="film" aria-label="Marco Compiles Reality animated short">
+      <div class="corner corner-left"><i class="rec-dot"></i> evidence_0042.mov</div>
+      <div class="corner corner-right">16:9 / morally compressed</div>
+
+      <div class="scene scene-boot">
+        <div class="boot-stack">
+          <p class="eyebrow">Boot sequence // definitely safe</p>
+          <h1>Marco<br />Compiles<br />Reality</h1>
+          <p class="boot-copy">Loading ego modules... <span class="cursor">█</span></p>
+        </div>
+      </div>
+
+      <div class="scene scene-thesis">
+        <span class="giant-num" aria-hidden="true">10x</span>
+        <p class="thesis">Some developers choose tools.<br />Marco chooses <em>suffering.</em></p>
+      </div>
+
+      <div class="scene scene-rig">
+        <div class="rig-grid">
+          <div class="rig-copy">
+            <p class="eyebrow">Hardware acquisition phase</p>
+            <h2>Built from<br />scrap.<br />Runs Arch.</h2>
+            <p>Cooling: one angry desk fan.<br />Power supply: legally a kettle.<br />Warranty: “trust me, irmão.”</p>
+          </div>
+          <div class="scrap-rig" aria-label="A computer assembled from scrap metal, cables, brick and duct tape">
+            <div class="cable c1"></div><div class="cable c2"></div><div class="cable c3"></div>
+            <div class="case"><div class="brick"></div><div class="fan"></div><div class="duct-tape"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scene scene-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><span class="lights"><i></i><i></i><i></i></span><span>marco@favela-one-man — bash — 420x69</span><span>root-ish</span></div>
+          <div class="terminal-body">
+            <div class="line" style="--i:0"><span class="prompt">marco@rig:~$</span> sudo compile --universe --from-scratch</div>
+            <div class="line" style="--i:1">[ <span class="cyan">OK</span> ] downloading 84,912 dependencies...</div>
+            <div class="line" style="--i:2">[ <span class="warn">WARN</span> ] simple solution detected; removing it</div>
+            <div class="line" style="--i:3">[ <span class="pink">EGO</span> ] inventing new framework: marco.js</div>
+            <div class="line" style="--i:4">[ <span class="cyan">OK</span> ] rewriting animation engine in Rust</div>
+            <div class="compile-meter" role="img" aria-label="Compilation progress bar"></div>
+            <div class="line" style="--i:5">[ <span class="warn">WARN</span> ] keyboard temperature: medium rare</div>
+            <div class="line" style="--i:6">[ <span class="cyan">OK</span> ] reality compiled with 38,441 warnings</div>
+            <div class="line" style="--i:7"><span class="prompt">marco@rig:~$</span> echo $STATUS → <span class="acid">WORKS_ON_MY_MACHINE</span><span class="cursor">_</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scene scene-benchmark">
+        <div class="benchmark-grid">
+          <div>
+            <p class="eyebrow">Independent benchmark*</p>
+            <h2>Objectively<br />10× better.</h2>
+            <span class="stamp">*Marco was the independent tester</span>
+          </div>
+          <div class="stat-stack">
+            <div class="stat"><span>Frames per second</span><strong>THEOLOGICAL</strong></div>
+            <div class="stat"><span>Lines of code avoided</span><strong>0</strong></div>
+            <div class="stat"><span>Tabs vs spaces</span><strong>VIOLENCE</strong></div>
+            <div class="stat"><span>Humility</span><strong>NaN%</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scene scene-final">
+        <div class="final-stack">
+          <p class="eyebrow final-kicker">Developer // scripter // animator // menace</p>
+          <h2 class="final-title">Marco<br /><span>De Morphman</span></h2>
+          <p class="final-copy">Built one animation. Accidentally invented three operating systems.</p>
+        </div>
+      </div>
+
+      <div class="start-card">
+        <div class="start-card-inner">
+          <span class="pretitle">A needlessly over-engineered short</span>
+          <h2>Marco<br /><span>Compiles Reality</span></h2>
+          <p>32 seconds of Linux, scrap metal and the quiet confidence of a man who has never read the documentation because he wrote a replacement.</p>
+          <button class="primary-button" id="startButton" type="button">Run Marco.exe ↗</button>
+        </div>
+      </div>
+
+      <div class="progress-track" aria-hidden="true"><div class="progress"></div></div>
+    </section>
+
+    <footer class="control-strip">
+      <div class="controls">
+        <button class="ghost-button" id="playButton" type="button" aria-label="Play or pause film">Play</button>
+        <button class="ghost-button" id="soundButton" type="button" aria-pressed="false">Sound: off</button>
+      </div>
+      <span class="shortcut">Space: pause&nbsp;&nbsp; R: replay</span>
+      <span id="timecode">00:00 / 00:32</span>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      const TOTAL = 32;
+      const film = document.getElementById('film');
+      const startButton = document.getElementById('startButton');
+      const playButton = document.getElementById('playButton');
+      const soundButton = document.getElementById('soundButton');
+      const timecode = document.getElementById('timecode');
+
+      let state = 'idle';
+      let elapsed = 0;
+      let startedAt = 0;
+      let frame = 0;
+      let soundOn = false;
+      let audio = null;
+
+      const pad = value => String(Math.max(0, Math.floor(value))).padStart(2, '0');
+
+      function resetAnimations() {
+        film.classList.remove('playing', 'paused');
+        void film.offsetWidth;
+      }
+
+      function createTone(ctx, destination, when, frequency, duration, type = 'square', volume = .035) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequency, when);
+        gain.gain.setValueAtTime(0.0001, when);
+        gain.gain.exponentialRampToValueAtTime(volume, when + .008);
+        gain.gain.exponentialRampToValueAtTime(0.0001, when + duration);
+        osc.connect(gain).connect(destination);
+        osc.start(when);
+        osc.stop(when + duration + .02);
+      }
+
+      function startAudio() {
+        if (!soundOn || audio) return;
+        const Context = window.AudioContext || window.webkitAudioContext;
+        if (!Context) return;
+        const ctx = new Context();
+        const master = ctx.createGain();
+        master.gain.value = .85;
+        master.connect(ctx.destination);
+
+        const now = ctx.currentTime + .03;
+        const hum = ctx.createOscillator();
+        const humGain = ctx.createGain();
+        hum.type = 'sawtooth';
+        hum.frequency.value = 43;
+        humGain.gain.value = .012;
+        hum.connect(humGain).connect(master);
+        hum.start(now);
+        hum.stop(now + TOTAL + 1);
+
+        [0, .14, .28].forEach((d, i) => createTone(ctx, master, now + d, 180 + i * 90, .08, 'square', .04));
+        [4.2, 9.5, 15.8, 22.7, 27.9].forEach((t, i) => createTone(ctx, master, now + t, 110 + i * 42, .18, 'sawtooth', .055));
+        for (let t = 16.5; t < 21.4; t += .19) createTone(ctx, master, now + t, 520 + Math.random() * 380, .025, 'square', .018);
+        [28.1, 28.38, 28.66, 29.05].forEach((t, i) => createTone(ctx, master, now + t, 220 * (i + 1), .18, 'sine', .06));
+        audio = { ctx, master };
+      }
+
+      function stopAudio() {
+        if (!audio) return;
+        audio.ctx.close().catch(() => {});
+        audio = null;
+      }
+
+      function updateClock() {
+        if (state === 'playing') elapsed = Math.min(TOTAL, (performance.now() - startedAt) / 1000);
+        timecode.textContent = `00:${pad(elapsed)} / 00:32`;
+
+        if (elapsed >= TOTAL) {
+          state = 'ended';
+          playButton.textContent = 'Replay';
+          cancelAnimationFrame(frame);
+          return;
+        }
+        frame = requestAnimationFrame(updateClock);
+      }
+
+      function start() {
+        stopAudio();
+        resetAnimations();
+        elapsed = 0;
+        state = 'playing';
+        startedAt = performance.now();
+        film.classList.add('playing');
+        playButton.textContent = 'Pause';
+        startAudio();
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(updateClock);
+      }
+
+      function togglePlay() {
+        if (state === 'idle' || state === 'ended') return start();
+        if (state === 'playing') {
+          elapsed = Math.min(TOTAL, (performance.now() - startedAt) / 1000);
+          state = 'paused';
+          film.classList.add('paused');
+          playButton.textContent = 'Resume';
+          if (audio) audio.ctx.suspend();
+          cancelAnimationFrame(frame);
+          return;
+        }
+        state = 'playing';
+        startedAt = performance.now() - elapsed * 1000;
+        film.classList.remove('paused');
+        playButton.textContent = 'Pause';
+        if (audio) audio.ctx.resume();
+        frame = requestAnimationFrame(updateClock);
+      }
+
+      function toggleSound() {
+        soundOn = !soundOn;
+        soundButton.textContent = `Sound: ${soundOn ? 'on' : 'off'}`;
+        soundButton.setAttribute('aria-pressed', String(soundOn));
+        if (!soundOn) stopAudio();
+        else if (state === 'playing' && elapsed < .7) startAudio();
+      }
+
+      startButton.addEventListener('click', start);
+      playButton.addEventListener('click', togglePlay);
+      soundButton.addEventListener('click', toggleSound);
+      document.addEventListener('keydown', event => {
+        if (event.code === 'Space' && event.target.tagName !== 'BUTTON') {
+          event.preventDefault();
+          togglePlay();
+        }
+        if (event.key.toLowerCase() === 'r') start();
+      });
+    })();
+  </script>
+</body>
+</html>
