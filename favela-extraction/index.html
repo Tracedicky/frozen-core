@@ -1,0 +1,1844 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Favela Extraction: Clout &amp; Components</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #050713;
+      --panel: rgba(8, 12, 28, 0.9);
+      --cyan: #43e8ff;
+      --pink: #ff4da6;
+      --gold: #ffcd57;
+      --green: #72ffad;
+      --muted: #9aa6c6;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(88, 52, 170, 0.22), transparent 34%),
+        radial-gradient(circle at 80% 90%, rgba(0, 195, 255, 0.16), transparent 33%),
+        #03040b;
+      color: #f5f7ff;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .game-shell {
+      width: min(1280px, 100%);
+      position: relative;
+      border: 1px solid rgba(116, 230, 255, 0.35);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #050713;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04) inset,
+        0 28px 90px rgba(0,0,0,0.58),
+        0 0 70px rgba(54, 191, 255, 0.12);
+    }
+
+    .topbar {
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 14px 10px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(90deg, rgba(17,22,47,0.98), rgba(8,10,22,0.98));
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 auto;
+      border: 2px solid var(--cyan);
+      transform: rotate(45deg);
+      box-shadow: 0 0 18px rgba(67,232,255,0.55), 9px 9px 0 -5px var(--pink);
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .icon-button {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 9px;
+      padding: 7px 10px;
+      color: #dce4ff;
+      background: rgba(255,255,255,0.055);
+      font: 700 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+
+    .icon-button:hover,
+    .icon-button:focus-visible {
+      border-color: var(--cyan);
+      color: white;
+      outline: none;
+    }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      width: 100%;
+      background: #07101d;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      cursor: crosshair;
+    }
+
+    .panel {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: clamp(16px, 4vw, 48px);
+      background:
+        linear-gradient(rgba(2,4,12,0.4), rgba(2,4,12,0.82)),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 4px);
+      backdrop-filter: blur(3px);
+      z-index: 5;
+    }
+
+    .panel.hidden { display: none; }
+
+    .card {
+      width: min(780px, 100%);
+      padding: clamp(22px, 4vw, 42px);
+      border: 1px solid rgba(109, 226, 255, 0.4);
+      border-radius: 14px;
+      background:
+        linear-gradient(135deg, rgba(18,25,53,0.96), rgba(7,9,22,0.96));
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04) inset,
+        0 18px 55px rgba(0,0,0,0.52),
+        0 0 40px rgba(48, 207, 255, 0.1);
+      text-align: center;
+    }
+
+    .eyebrow {
+      color: var(--cyan);
+      font: 800 11px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+    }
+
+    h1, h2 {
+      margin: 10px 0 8px;
+      line-height: 0.94;
+      text-transform: uppercase;
+      letter-spacing: -0.055em;
+    }
+
+    h1 {
+      font-size: clamp(36px, 7vw, 80px);
+      text-shadow: 3px 3px 0 rgba(255,77,166,0.7), -2px -2px 0 rgba(67,232,255,0.3);
+    }
+
+    h2 { font-size: clamp(32px, 5vw, 58px); }
+
+    .subtitle {
+      margin: 0 auto 22px;
+      max-width: 650px;
+      color: #bec8e7;
+      font-size: clamp(13px, 1.8vw, 17px);
+      line-height: 1.55;
+    }
+
+    .mission-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px;
+      margin: 22px 0;
+      text-align: left;
+    }
+
+    .mission {
+      min-height: 90px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .mission strong {
+      display: block;
+      margin-bottom: 6px;
+      color: white;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .mission span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .pink { color: var(--pink) !important; }
+    .gold { color: var(--gold) !important; }
+
+    .primary {
+      appearance: none;
+      min-width: 230px;
+      border: 0;
+      border-radius: 10px;
+      padding: 15px 22px;
+      color: #031018;
+      background: linear-gradient(90deg, var(--cyan), #93fff2);
+      box-shadow: 0 8px 28px rgba(67,232,255,0.28);
+      font: 900 12px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 120ms ease, filter 120ms ease;
+    }
+
+    .primary:hover,
+    .primary:focus-visible {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+      outline: none;
+    }
+
+    .controls-line {
+      margin-top: 16px;
+      color: #8290b3;
+      font: 700 10px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 22px 0;
+    }
+
+    .score-grid > div {
+      padding: 14px 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 9px;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .score-grid b {
+      display: block;
+      color: var(--cyan);
+      font: 900 23px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    .score-grid span {
+      display: block;
+      margin-top: 6px;
+      color: #8e9bbb;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .version {
+      padding: 9px 14px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      color: #66718f;
+      background: #050611;
+      font: 700 9px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: 0.08em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 700px) {
+      body { padding: 0; }
+      .game-shell { border-radius: 0; }
+      .topbar { min-height: 48px; }
+      .mission-grid { grid-template-columns: 1fr; }
+      .mission:nth-child(n+3) { display: none; }
+      .controls-line { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game-shell">
+    <div class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <div>
+          <strong>Favela Extraction</strong>
+          <small>Clout &amp; Components</small>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-button" id="muteButton" type="button">MUTE: OFF</button>
+        <button class="icon-button" id="fullButton" type="button">FULLSCREEN</button>
+      </div>
+    </div>
+
+    <section class="stage" id="stage">
+      <canvas id="game" width="1280" height="720" aria-label="Favela Extraction game canvas"></canvas>
+
+      <div class="panel" id="startPanel">
+        <div class="card">
+          <div class="eyebrow">A Dezerogue &amp; Mocoto Joint Disaster</div>
+          <h1>Clout &amp;<br>Components</h1>
+          <p class="subtitle">
+            Danny needs thirty viewers before the rooftop stream. Marco needs three suspiciously
+            powerful PC parts. Unfortunately, The Algorithm has other plans.
+          </p>
+          <div class="mission-grid">
+            <div class="mission">
+              <strong class="pink">Danny / Dezerogue</strong>
+              <span>Complete stream stunts, build clout and weaponise the selfie stick.</span>
+            </div>
+            <div class="mission">
+              <strong class="gold">Marco / Mocoto</strong>
+              <span>Recover the GPU, PSU and cooler. Install first; ask questions never.</span>
+            </div>
+            <div class="mission">
+              <strong>Switch constantly</strong>
+              <span>Each hero can interact with their own objectives. The other follows automatically.</span>
+            </div>
+            <div class="mission">
+              <strong>Defeat The Algorithm</strong>
+              <span>Reach the neon rooftop when both careers are sufficiently irresponsible.</span>
+            </div>
+          </div>
+          <button class="primary" id="startButton" type="button">Start extraction</button>
+          <div class="controls-line">
+            Move WASD / Arrows &nbsp;•&nbsp; Switch Q &nbsp;•&nbsp; Interact E &nbsp;•&nbsp;
+            Attack Space &nbsp;•&nbsp; Special F &nbsp;•&nbsp; Pause P
+          </div>
+        </div>
+      </div>
+
+      <div class="panel hidden" id="endPanel">
+        <div class="card">
+          <div class="eyebrow" id="endEyebrow">Transmission Complete</div>
+          <h2 id="endTitle">The Algorithm Fell</h2>
+          <p class="subtitle" id="endCopy"></p>
+          <div class="score-grid">
+            <div><b id="endViewers">0</b><span>Peak viewers</span></div>
+            <div><b id="endBenchmark">0</b><span>Benchmark</span></div>
+            <div><b id="endTime">0:00</b><span>Extraction time</span></div>
+          </div>
+          <button class="primary" id="restartButton" type="button">Run it back</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="version">Prototype v0.1 · Fictional action-comedy · Runs entirely on your computer</div>
+  </main>
+
+  <script>
+  "use strict";
+
+  (function () {
+    var canvas = document.getElementById("game");
+    var ctx = canvas.getContext("2d");
+    var startPanel = document.getElementById("startPanel");
+    var endPanel = document.getElementById("endPanel");
+    var startButton = document.getElementById("startButton");
+    var restartButton = document.getElementById("restartButton");
+    var muteButton = document.getElementById("muteButton");
+    var fullButton = document.getElementById("fullButton");
+    var stage = document.getElementById("stage");
+
+    var W = 1280;
+    var H = 720;
+    var WORLD_W = 2600;
+    var WORLD_H = 1700;
+    var TAU = Math.PI * 2;
+    var FIXED_STEP = 1 / 60;
+
+    var C = {
+      bg: "#08111d",
+      road: "#111c2c",
+      roadLine: "#253953",
+      cyan: "#43e8ff",
+      pink: "#ff4da6",
+      gold: "#ffcd57",
+      green: "#72ffad",
+      red: "#ff5b6e",
+      purple: "#9c6cff",
+      white: "#f5f7ff",
+      muted: "#8e9bbb",
+      ink: "#050713"
+    };
+
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function dist(a, b) {
+      var dx = a.x - b.x;
+      var dy = a.y - b.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+    function norm(x, y) {
+      var d = Math.sqrt(x * x + y * y) || 1;
+      return { x: x / d, y: y / d };
+    }
+    function rnd(min, max) { return min + Math.random() * (max - min); }
+    function hash(n) {
+      var x = Math.sin(n * 91.733) * 43758.5453;
+      return x - Math.floor(x);
+    }
+    function formatTime(seconds) {
+      var m = Math.floor(seconds / 60);
+      var s = Math.floor(seconds % 60);
+      return m + ":" + String(s).padStart(2, "0");
+    }
+    function roundRect(x, y, w, h, r) {
+      r = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+    function panel(x, y, w, h, alpha) {
+      ctx.save();
+      ctx.fillStyle = "rgba(5, 8, 20, " + (alpha || 0.88) + ")";
+      ctx.strokeStyle = "rgba(130, 220, 255, 0.24)";
+      ctx.lineWidth = 1;
+      roundRect(x, y, w, h, 9);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+    function text(str, x, y, size, color, align, weight) {
+      ctx.fillStyle = color || C.white;
+      ctx.textAlign = align || "left";
+      ctx.textBaseline = "middle";
+      ctx.font = (weight || 700) + " " + size + "px ui-monospace, SFMono-Regular, Consolas, monospace";
+      ctx.fillText(str, Math.round(x), Math.round(y));
+    }
+
+    var keys = Object.create(null);
+    var pressed = Object.create(null);
+    var mouseDown = false;
+    var gamepadPrevious = [];
+    var padMove = { x: 0, y: 0 };
+
+    window.addEventListener("keydown", function (e) {
+      var key = e.key.toLowerCase();
+      if (!keys[key]) pressed[key] = true;
+      keys[key] = true;
+      if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright"].indexOf(key) >= 0) {
+        e.preventDefault();
+      }
+      if (key === "enter" && game.mode === "menu") startGame();
+      if (key === "enter" && (game.mode === "victory" || game.mode === "gameover")) startGame();
+    });
+    window.addEventListener("keyup", function (e) {
+      keys[e.key.toLowerCase()] = false;
+    });
+    canvas.addEventListener("mousedown", function () { mouseDown = true; });
+    window.addEventListener("mouseup", function () { mouseDown = false; });
+    window.addEventListener("blur", function () {
+      if (game.mode === "playing") game.paused = true;
+      keys = Object.create(null);
+      pressed = Object.create(null);
+    });
+
+    function consume(key) {
+      if (pressed[key]) {
+        delete pressed[key];
+        return true;
+      }
+      return false;
+    }
+
+    function pollGamepad() {
+      padMove.x = 0;
+      padMove.y = 0;
+      var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+      var pad = pads && pads[0];
+      if (!pad) {
+        gamepadPrevious = [];
+        return;
+      }
+      padMove.x = Math.abs(pad.axes[0] || 0) > 0.18 ? pad.axes[0] : 0;
+      padMove.y = Math.abs(pad.axes[1] || 0) > 0.18 ? pad.axes[1] : 0;
+      var names = ["padAttack", "padSpecial", "padInteract", "padSwitch"];
+      [0, 1, 2, 3].forEach(function (buttonIndex, i) {
+        var down = !!(pad.buttons[buttonIndex] && pad.buttons[buttonIndex].pressed);
+        if (down && !gamepadPrevious[buttonIndex]) pressed[names[i]] = true;
+        gamepadPrevious[buttonIndex] = down;
+      });
+    }
+
+    var audioContext = null;
+    var muted = false;
+    function ensureAudio() {
+      if (!audioContext) {
+        var AudioCtor = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtor) audioContext = new AudioCtor();
+      }
+      if (audioContext && audioContext.state === "suspended") audioContext.resume();
+    }
+    function beep(freq, duration, type, volume, slide) {
+      if (muted) return;
+      ensureAudio();
+      if (!audioContext) return;
+      var now = audioContext.currentTime;
+      var osc = audioContext.createOscillator();
+      var gain = audioContext.createGain();
+      osc.type = type || "square";
+      osc.frequency.setValueAtTime(freq, now);
+      if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(30, slide), now + duration);
+      gain.gain.setValueAtTime(volume || 0.04, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      osc.start(now);
+      osc.stop(now + duration);
+    }
+    function chord(root) {
+      beep(root, 0.18, "triangle", 0.035, root * 1.2);
+      setTimeout(function () { beep(root * 1.25, 0.22, "triangle", 0.03, root * 1.5); }, 70);
+      setTimeout(function () { beep(root * 1.5, 0.28, "triangle", 0.025, root * 2); }, 140);
+    }
+
+    muteButton.addEventListener("click", function () {
+      muted = !muted;
+      muteButton.textContent = "MUTE: " + (muted ? "ON" : "OFF");
+      if (!muted) beep(440, 0.08, "square", 0.025, 660);
+    });
+    fullButton.addEventListener("click", function () {
+      if (!document.fullscreenElement) {
+        stage.requestFullscreen && stage.requestFullscreen();
+      } else {
+        document.exitFullscreen && document.exitFullscreen();
+      }
+    });
+
+    var buildings = [
+      { x: 70, y: 70, w: 520, h: 330, label: "PIXEL PALACE", color: "#17243c" },
+      { x: 790, y: 60, w: 520, h: 320, label: "NET CAFÉ", color: "#1e203e" },
+      { x: 1510, y: 70, w: 420, h: 340, label: "STREAM MART", color: "#24203b" },
+      { x: 130, y: 700, w: 500, h: 350, label: "SCRAP MARKET", color: "#202b3a" },
+      { x: 850, y: 690, w: 530, h: 290, label: "MOCOTO LABS", color: "#172a35" },
+      { x: 1620, y: 760, w: 430, h: 330, label: "BUFFER PLAZA", color: "#251e3b" },
+      { x: 700, y: 1260, w: 520, h: 330, label: "COOLING DEPOT", color: "#1b263d" },
+      { x: 1740, y: 1280, w: 700, h: 300, label: "POWER DISTRICT", color: "#242535" }
+    ];
+
+    var props = [
+      { x: 670, y: 180, type: "lamp" }, { x: 1410, y: 220, type: "lamp" },
+      { x: 2020, y: 520, type: "lamp" }, { x: 720, y: 560, type: "stall" },
+      { x: 1500, y: 570, type: "stall" }, { x: 2170, y: 1120, type: "lamp" },
+      { x: 1430, y: 1160, type: "lamp" }, { x: 640, y: 1160, type: "lamp" },
+      { x: 2470, y: 740, type: "stall" }, { x: 90, y: 1160, type: "stall" }
+    ];
+
+    var roof = { x: 2290, y: 455, radius: 190 };
+
+    var players;
+    var activeIndex;
+    var components;
+    var hotspots;
+    var enemies;
+    var projectiles;
+    var particles;
+    var turrets;
+    var boss;
+    var camera = { x: 0, y: 0, shake: 0 };
+    var game = {
+      mode: "menu",
+      paused: false,
+      health: 100,
+      viewers: 3,
+      peakViewers: 3,
+      benchmark: 1180,
+      startTime: 0,
+      elapsed: 0,
+      spawnTimer: 7,
+      ambientTimer: 2,
+      hurtFlash: 0,
+      dialogue: null,
+      objectivePulse: 0,
+      bossIntro: 0
+    };
+
+    function makePlayer(name, alias, x, y, color, accent, role) {
+      return {
+        name: name,
+        alias: alias,
+        x: x,
+        y: y,
+        r: 19,
+        color: color,
+        accent: accent,
+        role: role,
+        speed: role === "danny" ? 245 : 225,
+        facingX: 1,
+        facingY: 0,
+        attackCooldown: 0,
+        specialCooldown: 0,
+        walk: 0
+      };
+    }
+
+    function resetWorld() {
+      players = [
+        makePlayer("DANNY", "DEZEROGUE", 1440, 1110, C.pink, C.cyan, "danny"),
+        makePlayer("MARCO", "MOCOTO", 1388, 1140, C.gold, C.green, "marco")
+      ];
+      activeIndex = 0;
+      components = [
+        { name: "RTX 9090½", short: "GPU", x: 355, y: 535, color: C.purple, score: 3320, collected: false },
+        { name: "2000W PSU", short: "PSU", x: 2290, y: 1180, color: C.gold, score: 2180, collected: false },
+        { name: "Cryo Reactor", short: "COOLER", x: 1435, y: 1480, color: C.cyan, score: 2750, collected: false }
+      ];
+      hotspots = [
+        { name: "Roof-gap jump", x: 690, y: 500, reward: 9, done: false },
+        { name: "Public reaction", x: 1435, y: 505, reward: 11, done: false },
+        { name: "Unboxing disaster", x: 2150, y: 1180, reward: 13, done: false }
+      ];
+      enemies = [];
+      projectiles = [];
+      particles = [];
+      turrets = [];
+      boss = {
+        active: false,
+        dead: false,
+        x: roof.x,
+        y: roof.y,
+        r: 56,
+        hp: 520,
+        maxHp: 520,
+        cooldown: 1,
+        summonCooldown: 5,
+        angle: 0,
+        hurt: 0
+      };
+      game.health = 100;
+      game.viewers = 3;
+      game.peakViewers = 3;
+      game.benchmark = 1180;
+      game.elapsed = 0;
+      game.spawnTimer = 7;
+      game.ambientTimer = 2;
+      game.hurtFlash = 0;
+      game.dialogue = null;
+      game.objectivePulse = 0;
+      game.bossIntro = 0;
+      game.paused = false;
+      camera.x = players[0].x - W / 2;
+      camera.y = players[0].y - H / 2;
+      camera.shake = 0;
+
+      components.forEach(function (item, i) {
+        spawnWave(item.x + (i % 2 ? 100 : -100), item.y + 50, 2, i === 1 ? "copyright" : "buffer");
+      });
+      hotspots.forEach(function (spot, i) {
+        spawnWave(spot.x + 70, spot.y + 70, 1 + (i === 2 ? 1 : 0), "troll");
+      });
+    }
+
+    function startGame() {
+      ensureAudio();
+      resetWorld();
+      game.mode = "playing";
+      game.startTime = performance.now();
+      startPanel.classList.add("hidden");
+      endPanel.classList.add("hidden");
+      say("DANNY", "Tonight, Marco. Tonight I become internationally unavoidable.", C.pink);
+      chord(220);
+    }
+
+    startButton.addEventListener("click", startGame);
+    restartButton.addEventListener("click", startGame);
+
+    function obstacleCollision(x, y, r) {
+      for (var i = 0; i < buildings.length; i++) {
+        var b = buildings[i];
+        var nx = clamp(x, b.x, b.x + b.w);
+        var ny = clamp(y, b.y, b.y + b.h);
+        var dx = x - nx;
+        var dy = y - ny;
+        if (dx * dx + dy * dy < r * r) return true;
+      }
+      return false;
+    }
+
+    function moveEntity(entity, dx, dy) {
+      var nx = clamp(entity.x + dx, entity.r + 10, WORLD_W - entity.r - 10);
+      if (!obstacleCollision(nx, entity.y, entity.r)) entity.x = nx;
+      var ny = clamp(entity.y + dy, entity.r + 10, WORLD_H - entity.r - 10);
+      if (!obstacleCollision(entity.x, ny, entity.r)) entity.y = ny;
+    }
+
+    function say(speaker, line, color) {
+      game.dialogue = { speaker: speaker, line: line, color: color || C.cyan, time: 4.2 };
+    }
+
+    function burst(x, y, color, count, speed) {
+      for (var i = 0; i < count; i++) {
+        var a = Math.random() * TAU;
+        var s = rnd(speed * 0.35, speed);
+        particles.push({
+          x: x,
+          y: y,
+          vx: Math.cos(a) * s,
+          vy: Math.sin(a) * s,
+          life: rnd(0.35, 0.8),
+          maxLife: 0.8,
+          color: color,
+          size: rnd(2, 6)
+        });
+      }
+    }
+
+    function spawnEnemy(x, y, kind) {
+      var spec = {
+        buffer: { hp: 45, speed: 88, damage: 8, color: C.purple, r: 18, name: "BUFFER BUG" },
+        copyright: { hp: 68, speed: 70, damage: 12, color: C.red, r: 21, name: "COPYRIGHT DRONE" },
+        troll: { hp: 54, speed: 105, damage: 9, color: C.green, r: 19, name: "CHAT TROLL" },
+        minion: { hp: 82, speed: 118, damage: 13, color: C.cyan, r: 22, name: "ALGO MINION" }
+      }[kind || "buffer"];
+      var p = { x: x, y: y, r: spec.r };
+      if (obstacleCollision(p.x, p.y, p.r)) {
+        p.x += 90;
+        p.y += 90;
+      }
+      enemies.push({
+        x: p.x,
+        y: p.y,
+        r: spec.r,
+        kind: kind || "buffer",
+        hp: spec.hp,
+        maxHp: spec.hp,
+        speed: spec.speed,
+        damage: spec.damage,
+        color: spec.color,
+        name: spec.name,
+        attackCooldown: rnd(0.2, 0.8),
+        stunned: 0,
+        hurt: 0,
+        phase: Math.random() * TAU,
+        dead: false
+      });
+    }
+
+    function spawnWave(x, y, count, kind) {
+      for (var i = 0; i < count; i++) {
+        spawnEnemy(
+          clamp(x + rnd(-65, 65), 35, WORLD_W - 35),
+          clamp(y + rnd(-65, 65), 35, WORLD_H - 35),
+          kind || (Math.random() > 0.55 ? "troll" : "buffer")
+        );
+      }
+    }
+
+    function activePlayer() { return players[activeIndex]; }
+    function companion() { return players[1 - activeIndex]; }
+    function collectedCount() {
+      return components.filter(function (item) { return item.collected; }).length;
+    }
+    function completedStunts() {
+      return hotspots.filter(function (spot) { return spot.done; }).length;
+    }
+    function roofReady() {
+      return collectedCount() === components.length && game.viewers >= 30;
+    }
+
+    function switchPlayer() {
+      activeIndex = 1 - activeIndex;
+      var p = activePlayer();
+      burst(p.x, p.y, p.color, 12, 115);
+      beep(activeIndex === 0 ? 520 : 340, 0.08, "square", 0.025, activeIndex === 0 ? 760 : 470);
+      say(p.name, p.role === "danny" ? "Camera on me. Obviously." : "Move. The components will not benchmark themselves.", p.color);
+    }
+
+    function nearestInteractable() {
+      var p = activePlayer();
+      var best = null;
+      var bestD = 84;
+      components.forEach(function (item) {
+        if (item.collected) return;
+        var d = dist(p, item);
+        if (d < bestD) { best = { type: "component", item: item, d: d }; bestD = d; }
+      });
+      hotspots.forEach(function (spot) {
+        if (spot.done) return;
+        var d = dist(p, spot);
+        if (d < bestD) { best = { type: "hotspot", item: spot, d: d }; bestD = d; }
+      });
+      if (!boss.active && roofReady()) {
+        var rd = dist(p, roof);
+        if (rd < roof.radius + 35 && rd < bestD + 180) best = { type: "roof", item: roof, d: rd };
+      }
+      return best;
+    }
+
+    function interact() {
+      var nearby = nearestInteractable();
+      if (!nearby) {
+        beep(120, 0.06, "square", 0.018, 90);
+        return;
+      }
+      var p = activePlayer();
+      if (nearby.type === "component") {
+        if (p.role !== "marco") {
+          say("MARCO", "Danny, do not unbox that. It has actual value.", C.gold);
+          beep(130, 0.12, "square", 0.02, 80);
+          return;
+        }
+        var part = nearby.item;
+        part.collected = true;
+        game.benchmark += part.score;
+        camera.shake = 9;
+        burst(part.x, part.y, part.color, 34, 230);
+        chord(330 + collectedCount() * 55);
+        say("MARCO", part.name + " acquired. The laws of sensible power draw no longer apply.", C.gold);
+        spawnWave(part.x + 100, part.y + 80, 2 + collectedCount(), "copyright");
+      } else if (nearby.type === "hotspot") {
+        if (p.role !== "danny") {
+          say("DANNY", "Marco, that stunt needs charisma. Switch back to me.", C.pink);
+          beep(150, 0.1, "square", 0.02, 110);
+          return;
+        }
+        var spot = nearby.item;
+        spot.done = true;
+        game.viewers += spot.reward;
+        game.peakViewers = Math.max(game.peakViewers, game.viewers);
+        camera.shake = 12;
+        burst(spot.x, spot.y, C.pink, 36, 255);
+        chord(440 + completedStunts() * 45);
+        say("DANNY", spot.name + " complete. Clip it, title it, exaggerate everything.", C.pink);
+        spawnWave(spot.x + 120, spot.y, 2 + completedStunts(), completedStunts() > 1 ? "troll" : "buffer");
+      } else if (nearby.type === "roof") {
+        beginBoss();
+      }
+      if (roofReady() && !boss.active) {
+        game.objectivePulse = 4;
+        setTimeout(function () {
+          if (game.mode === "playing" && !boss.active) {
+            say("SYSTEM", "ROOFTOP UPLINK OPEN — THE ALGORITHM IS WAITING", C.cyan);
+          }
+        }, 450);
+      }
+    }
+
+    function beginBoss() {
+      boss.active = true;
+      game.bossIntro = 3.5;
+      game.objectivePulse = 0;
+      camera.shake = 24;
+      burst(boss.x, boss.y, C.cyan, 70, 330);
+      spawnWave(boss.x - 180, boss.y + 140, 3, "minion");
+      say("THE ALGORITHM", "ENGAGEMENT DETECTED. REDUCING ORGANIC REACH TO ZERO.", C.red);
+      beep(90, 0.7, "sawtooth", 0.055, 38);
+    }
+
+    function damageTarget(target, amount, sourcePlayer) {
+      if (!target || target.dead) return;
+      target.hp -= amount;
+      target.hurt = 0.16;
+      burst(target.x, target.y, target.color || C.red, 8, 150);
+      if (target === boss) {
+        camera.shake = Math.max(camera.shake, 5);
+      }
+      if (target.hp <= 0) {
+        target.dead = true;
+        burst(target.x, target.y, target.color || C.cyan, target === boss ? 90 : 24, target === boss ? 360 : 220);
+        if (sourcePlayer && sourcePlayer.role === "danny" && target !== boss) {
+          game.viewers += 1;
+          game.peakViewers = Math.max(game.peakViewers, game.viewers);
+        }
+        if (target === boss) {
+          boss.dead = true;
+          camera.shake = 34;
+          chord(523);
+          setTimeout(victory, 1300);
+        } else {
+          beep(170, 0.08, "square", 0.018, 70);
+        }
+      } else {
+        beep(target === boss ? 110 : 190, 0.045, "square", 0.015, 80);
+      }
+    }
+
+    function attack() {
+      var p = activePlayer();
+      if (p.attackCooldown > 0) return;
+      p.attackCooldown = p.role === "danny" ? 0.34 : 0.42;
+      var range = p.role === "danny" ? 82 : 68;
+      var damage = p.role === "danny" ? 27 : 38;
+      var hit = false;
+      var targets = enemies.slice();
+      if (boss.active && !boss.dead) targets.push(boss);
+      targets.forEach(function (enemy) {
+        if (enemy.dead || dist(p, enemy) > range + enemy.r) return;
+        var to = norm(enemy.x - p.x, enemy.y - p.y);
+        var facing = to.x * p.facingX + to.y * p.facingY;
+        if (facing > -0.25) {
+          damageTarget(enemy, damage, p);
+          enemy.x += p.facingX * 18;
+          enemy.y += p.facingY * 18;
+          hit = true;
+        }
+      });
+      burst(p.x + p.facingX * 42, p.y + p.facingY * 42, p.accent, hit ? 10 : 5, 125);
+      camera.shake = Math.max(camera.shake, hit ? 5 : 2);
+      beep(p.role === "danny" ? 260 : 150, 0.07, "square", 0.018, p.role === "danny" ? 540 : 95);
+    }
+
+    function special() {
+      var p = activePlayer();
+      if (p.specialCooldown > 0) return;
+      if (p.role === "danny") {
+        p.specialCooldown = 8;
+        var count = 0;
+        enemies.forEach(function (enemy) {
+          if (!enemy.dead && dist(p, enemy) < 175) {
+            enemy.stunned = 2.4;
+            damageTarget(enemy, 18, p);
+            var push = norm(enemy.x - p.x, enemy.y - p.y);
+            enemy.x += push.x * 55;
+            enemy.y += push.y * 55;
+            count++;
+          }
+        });
+        if (boss.active && !boss.dead && dist(p, boss) < 205) {
+          damageTarget(boss, 13, p);
+          count++;
+        }
+        game.viewers += Math.min(3, count);
+        game.peakViewers = Math.max(game.peakViewers, game.viewers);
+        camera.shake = 18;
+        burst(p.x, p.y, C.pink, 48, 280);
+        say("DANNY", "AURA BURST! That looked expensive. Keep it in the edit.", C.pink);
+        beep(220, 0.45, "sawtooth", 0.04, 880);
+      } else {
+        p.specialCooldown = 9;
+        if (turrets.length >= 2) turrets.shift();
+        turrets.push({ x: p.x - p.facingY * 18, y: p.y + p.facingX * 18, life: 16, cooldown: 0.2, angle: 0 });
+        burst(p.x, p.y, C.gold, 28, 180);
+        say("MARCO", "Scrap turret online. Warranty status: spiritually uncertain.", C.gold);
+        beep(150, 0.2, "square", 0.03, 620);
+      }
+    }
+
+    function hurtTeam(amount) {
+      if (game.mode !== "playing" || game.bossIntro > 0) return;
+      game.health = Math.max(0, game.health - amount);
+      game.hurtFlash = 0.28;
+      camera.shake = Math.max(camera.shake, 11);
+      burst(activePlayer().x, activePlayer().y, C.red, 14, 190);
+      beep(100, 0.15, "sawtooth", 0.035, 55);
+      if (game.health <= 0) gameOver();
+    }
+
+    function gameOver() {
+      game.mode = "gameover";
+      document.getElementById("endEyebrow").textContent = "Connection Lost";
+      document.getElementById("endTitle").textContent = "The Stream Died";
+      document.getElementById("endCopy").textContent =
+        "The Algorithm buried Danny's reach while Marco attempted to cool the router with an industrial fan. Nobody has admitted fault.";
+      fillEndStats();
+      restartButton.textContent = "Retry extraction";
+      endPanel.classList.remove("hidden");
+      beep(160, 0.8, "sawtooth", 0.045, 42);
+    }
+
+    function victory() {
+      if (game.mode !== "playing") return;
+      game.mode = "victory";
+      game.elapsed = (performance.now() - game.startTime) / 1000;
+      var famous = game.peakViewers >= 55;
+      var ending = famous
+        ? "Danny has become locally unavoidable and is already planning a documentary about the experience."
+        : "Danny declares ten-plus viewers a global breakthrough and immediately orders commemorative merchandise.";
+      ending += " Marco's completed machine posts " + game.benchmark.toLocaleString() +
+        " points, briefly dimming every light in the district.";
+      document.getElementById("endEyebrow").textContent = "Transmission Complete";
+      document.getElementById("endTitle").textContent = "The Algorithm Fell";
+      document.getElementById("endCopy").textContent = ending;
+      fillEndStats();
+      restartButton.textContent = "Run it back";
+      endPanel.classList.remove("hidden");
+      saveBest();
+    }
+
+    function fillEndStats() {
+      document.getElementById("endViewers").textContent = String(game.peakViewers);
+      document.getElementById("endBenchmark").textContent = game.benchmark.toLocaleString();
+      document.getElementById("endTime").textContent = formatTime(game.elapsed);
+    }
+
+    function saveBest() {
+      try {
+        var old = JSON.parse(localStorage.getItem("favelaExtractionBest") || "{}");
+        var next = {
+          viewers: Math.max(old.viewers || 0, game.peakViewers),
+          benchmark: Math.max(old.benchmark || 0, game.benchmark),
+          time: old.time ? Math.min(old.time, game.elapsed) : game.elapsed
+        };
+        localStorage.setItem("favelaExtractionBest", JSON.stringify(next));
+      } catch (e) {
+        /* Local file privacy modes may disable storage; the game still works. */
+      }
+    }
+
+    function updatePlayer(dt) {
+      var p = activePlayer();
+      var dx = 0;
+      var dy = 0;
+      if (keys["a"] || keys["arrowleft"]) dx -= 1;
+      if (keys["d"] || keys["arrowright"]) dx += 1;
+      if (keys["w"] || keys["arrowup"]) dy -= 1;
+      if (keys["s"] || keys["arrowdown"]) dy += 1;
+      dx += padMove.x;
+      dy += padMove.y;
+      var direction = norm(dx, dy);
+      var moving = Math.abs(dx) + Math.abs(dy) > 0.05;
+      if (moving) {
+        p.facingX = direction.x;
+        p.facingY = direction.y;
+        moveEntity(p, direction.x * p.speed * dt, direction.y * p.speed * dt);
+        p.walk += dt * 11;
+      }
+      p.attackCooldown = Math.max(0, p.attackCooldown - dt);
+      p.specialCooldown = Math.max(0, p.specialCooldown - dt);
+
+      var buddy = companion();
+      buddy.attackCooldown = Math.max(0, buddy.attackCooldown - dt);
+      buddy.specialCooldown = Math.max(0, buddy.specialCooldown - dt);
+      var desiredX = p.x - p.facingX * 55 + p.facingY * 25;
+      var desiredY = p.y - p.facingY * 55 - p.facingX * 25;
+      var follow = norm(desiredX - buddy.x, desiredY - buddy.y);
+      var gap = Math.sqrt((desiredX - buddy.x) * (desiredX - buddy.x) + (desiredY - buddy.y) * (desiredY - buddy.y));
+      if (gap > 28) {
+        moveEntity(buddy, follow.x * Math.min(buddy.speed * 0.92, gap * 4) * dt, follow.y * Math.min(buddy.speed * 0.92, gap * 4) * dt);
+        buddy.facingX = follow.x;
+        buddy.facingY = follow.y;
+        buddy.walk += dt * 9;
+      }
+      if (dist(p, buddy) > 430) {
+        buddy.x = p.x - p.facingX * 60;
+        buddy.y = p.y - p.facingY * 60;
+      }
+
+      if (consume("q") || consume("padswitch")) switchPlayer();
+      if (consume("e") || consume("padinteract")) interact();
+      if (keys[" "] || mouseDown || consume("padattack")) attack();
+      if (consume("f") || consume("padspecial")) special();
+    }
+
+    function updateEnemies(dt) {
+      var p = activePlayer();
+      enemies.forEach(function (enemy) {
+        if (enemy.dead) return;
+        enemy.hurt = Math.max(0, enemy.hurt - dt);
+        enemy.attackCooldown -= dt;
+        enemy.phase += dt * 3;
+        if (enemy.stunned > 0) {
+          enemy.stunned -= dt;
+          return;
+        }
+        var direction = norm(p.x - enemy.x, p.y - enemy.y);
+        var d = dist(enemy, p);
+        if (d > enemy.r + p.r + 8) {
+          moveEntity(enemy, direction.x * enemy.speed * dt, direction.y * enemy.speed * dt);
+        } else if (enemy.attackCooldown <= 0) {
+          enemy.attackCooldown = enemy.kind === "copyright" ? 1.35 : 0.95;
+          hurtTeam(enemy.damage);
+        }
+      });
+      enemies = enemies.filter(function (enemy) { return !enemy.dead; });
+
+      if (boss.active && !boss.dead) {
+        boss.hurt = Math.max(0, boss.hurt - dt);
+        boss.angle += dt * 0.62;
+        boss.cooldown -= dt;
+        boss.summonCooldown -= dt;
+        var orbitX = roof.x + Math.cos(boss.angle) * 52;
+        var orbitY = roof.y + Math.sin(boss.angle * 1.4) * 38;
+        boss.x = lerp(boss.x, orbitX, dt * 1.2);
+        boss.y = lerp(boss.y, orbitY, dt * 1.2);
+        if (boss.cooldown <= 0) {
+          boss.cooldown = boss.hp < boss.maxHp * 0.45 ? 0.62 : 1.05;
+          var aim = norm(p.x - boss.x, p.y - boss.y);
+          var base = Math.atan2(aim.y, aim.x);
+          var shots = boss.hp < boss.maxHp * 0.45 ? 3 : 1;
+          for (var s = 0; s < shots; s++) {
+            var offset = (s - (shots - 1) / 2) * 0.19;
+            projectiles.push({
+              x: boss.x,
+              y: boss.y,
+              vx: Math.cos(base + offset) * 265,
+              vy: Math.sin(base + offset) * 265,
+              r: 9,
+              life: 5,
+              color: s === 1 ? C.pink : C.cyan
+            });
+          }
+          beep(115, 0.12, "sawtooth", 0.018, 58);
+        }
+        if (boss.summonCooldown <= 0 && enemies.length < 10) {
+          boss.summonCooldown = boss.hp < boss.maxHp * 0.5 ? 4 : 6.5;
+          spawnWave(boss.x + rnd(-130, 130), boss.y + 135, 2, "minion");
+          burst(boss.x, boss.y, C.purple, 22, 180);
+        }
+      }
+    }
+
+    function updateProjectiles(dt) {
+      var p = activePlayer();
+      projectiles.forEach(function (shot) {
+        shot.x += shot.vx * dt;
+        shot.y += shot.vy * dt;
+        shot.life -= dt;
+        if (dist(shot, p) < shot.r + p.r) {
+          shot.life = 0;
+          hurtTeam(10);
+        }
+        if (obstacleCollision(shot.x, shot.y, shot.r)) {
+          shot.life = 0;
+          burst(shot.x, shot.y, shot.color, 6, 90);
+        }
+      });
+      projectiles = projectiles.filter(function (shot) { return shot.life > 0; });
+    }
+
+    function updateTurrets(dt) {
+      turrets.forEach(function (turret) {
+        turret.life -= dt;
+        turret.cooldown -= dt;
+        turret.angle += dt * 4;
+        if (turret.cooldown <= 0) {
+          var targets = enemies.filter(function (e) { return !e.dead && dist(e, turret) < 270; });
+          if (boss.active && !boss.dead && dist(boss, turret) < 320) targets.push(boss);
+          targets.sort(function (a, b) { return dist(a, turret) - dist(b, turret); });
+          if (targets[0]) {
+            turret.cooldown = 0.55;
+            turret.targetX = targets[0].x;
+            turret.targetY = targets[0].y;
+            turret.flash = 0.09;
+            damageTarget(targets[0], 16, players[1]);
+            beep(420, 0.035, "square", 0.01, 180);
+          }
+        }
+        turret.flash = Math.max(0, (turret.flash || 0) - dt);
+      });
+      turrets = turrets.filter(function (turret) { return turret.life > 0; });
+    }
+
+    function updateParticles(dt) {
+      particles.forEach(function (particle) {
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+        particle.vx *= Math.pow(0.08, dt);
+        particle.vy *= Math.pow(0.08, dt);
+        particle.life -= dt;
+      });
+      particles = particles.filter(function (particle) { return particle.life > 0; });
+    }
+
+    function updateDirector(dt) {
+      game.elapsed = (performance.now() - game.startTime) / 1000;
+      game.spawnTimer -= dt;
+      game.ambientTimer -= dt;
+      if (game.spawnTimer <= 0 && !boss.active && enemies.length < 14) {
+        game.spawnTimer = clamp(12 - game.viewers * 0.06, 6, 12);
+        var p = activePlayer();
+        var angle = Math.random() * TAU;
+        var sx = clamp(p.x + Math.cos(angle) * rnd(330, 480), 30, WORLD_W - 30);
+        var sy = clamp(p.y + Math.sin(angle) * rnd(330, 480), 30, WORLD_H - 30);
+        spawnWave(sx, sy, game.viewers > 32 ? 2 : 1, game.viewers > 45 ? "copyright" : "troll");
+      }
+      if (game.ambientTimer <= 0) {
+        game.ambientTimer = 5.5;
+        if (!muted) {
+          beep(55, 0.4, "triangle", 0.006, 66);
+          setTimeout(function () { if (game.mode === "playing") beep(82, 0.25, "triangle", 0.004, 99); }, 180);
+        }
+      }
+      if (game.dialogue) {
+        game.dialogue.time -= dt;
+        if (game.dialogue.time <= 0) game.dialogue = null;
+      }
+      game.hurtFlash = Math.max(0, game.hurtFlash - dt);
+      game.objectivePulse = Math.max(0, game.objectivePulse - dt);
+      game.bossIntro = Math.max(0, game.bossIntro - dt);
+      camera.shake = Math.max(0, camera.shake - dt * 24);
+    }
+
+    function updateCamera(dt) {
+      var p = activePlayer();
+      var tx = clamp(p.x - W / 2, 0, WORLD_W - W);
+      var ty = clamp(p.y - H / 2, 0, WORLD_H - H);
+      camera.x = lerp(camera.x, tx, 1 - Math.pow(0.0005, dt));
+      camera.y = lerp(camera.y, ty, 1 - Math.pow(0.0005, dt));
+    }
+
+    function update(dt) {
+      pollGamepad();
+      if (consume("p") || consume("escape")) game.paused = !game.paused;
+      if (game.paused || game.mode !== "playing") return;
+      updatePlayer(dt);
+      updateEnemies(dt);
+      updateProjectiles(dt);
+      updateTurrets(dt);
+      updateParticles(dt);
+      updateDirector(dt);
+      updateCamera(dt);
+    }
+
+    function worldTransform() {
+      var sx = camera.shake ? rnd(-camera.shake, camera.shake) : 0;
+      var sy = camera.shake ? rnd(-camera.shake, camera.shake) : 0;
+      ctx.translate(Math.round(-camera.x + sx), Math.round(-camera.y + sy));
+    }
+
+    function drawGround() {
+      ctx.fillStyle = C.bg;
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+
+      ctx.fillStyle = C.road;
+      ctx.fillRect(0, 430, WORLD_W, 205);
+      ctx.fillRect(0, 1080, WORLD_W, 160);
+      ctx.fillRect(635, 0, 135, WORLD_H);
+      ctx.fillRect(1400, 0, 145, WORLD_H);
+      ctx.fillRect(2110, 0, 135, WORLD_H);
+
+      ctx.strokeStyle = C.roadLine;
+      ctx.lineWidth = 3;
+      ctx.setLineDash([30, 24]);
+      [532, 1160].forEach(function (y) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(WORLD_W, y);
+        ctx.stroke();
+      });
+      [702, 1472, 2177].forEach(function (x) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, WORLD_H);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      ctx.globalAlpha = 0.14;
+      ctx.fillStyle = C.cyan;
+      for (var gx = 0; gx < WORLD_W; gx += 64) {
+        for (var gy = 0; gy < WORLD_H; gy += 64) {
+          if (hash(gx * 0.1 + gy) > 0.82) ctx.fillRect(gx + 5, gy + 5, 2, 2);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawBuilding(b, index) {
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,0.42)";
+      ctx.fillRect(b.x + 13, b.y + 17, b.w, b.h);
+      ctx.fillStyle = b.color;
+      ctx.strokeStyle = index % 2 ? "rgba(255,77,166,0.58)" : "rgba(67,232,255,0.55)";
+      ctx.lineWidth = 4;
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+      ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+      ctx.fillStyle = "#0b1222";
+      ctx.fillRect(b.x + 18, b.y + 18, b.w - 36, 48);
+      text(b.label, b.x + 36, b.y + 43, 16, index % 2 ? C.pink : C.cyan, "left", 900);
+
+      var cols = Math.max(2, Math.floor((b.w - 50) / 92));
+      var rows = Math.max(2, Math.floor((b.h - 110) / 72));
+      for (var row = 0; row < rows; row++) {
+        for (var col = 0; col < cols; col++) {
+          var wx = b.x + 35 + col * ((b.w - 70) / cols);
+          var wy = b.y + 92 + row * ((b.h - 120) / rows);
+          var lit = hash(index * 99 + row * 13 + col * 7) > 0.35;
+          ctx.fillStyle = lit ? (index % 3 === 0 ? "#ffd76a" : "#5bdfff") : "#0a101d";
+          ctx.globalAlpha = lit ? 0.58 : 1;
+          ctx.fillRect(wx, wy, 38, 25);
+          ctx.globalAlpha = 1;
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawProps() {
+      props.forEach(function (prop, index) {
+        if (prop.type === "lamp") {
+          ctx.strokeStyle = "#39465e";
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(prop.x, prop.y + 45);
+          ctx.lineTo(prop.x, prop.y - 15);
+          ctx.stroke();
+          ctx.fillStyle = index % 2 ? C.pink : C.cyan;
+          ctx.shadowBlur = 22;
+          ctx.shadowColor = ctx.fillStyle;
+          ctx.fillRect(prop.x - 7, prop.y - 22, 14, 10);
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.fillStyle = "#28324a";
+          ctx.fillRect(prop.x - 34, prop.y - 20, 68, 40);
+          ctx.fillStyle = index % 2 ? C.gold : C.pink;
+          ctx.fillRect(prop.x - 29, prop.y - 16, 58, 7);
+          ctx.fillStyle = "#101729";
+          ctx.fillRect(prop.x - 22, prop.y - 3, 14, 15);
+          ctx.fillRect(prop.x + 8, prop.y - 3, 14, 15);
+        }
+      });
+    }
+
+    function drawRoofArena() {
+      ctx.save();
+      ctx.strokeStyle = roofReady() ? C.cyan : "#39445d";
+      ctx.lineWidth = 7;
+      ctx.setLineDash([18, 10]);
+      ctx.beginPath();
+      ctx.arc(roof.x, roof.y, roof.radius, 0, TAU);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = roofReady() ? 0.14 + Math.sin(performance.now() * 0.004) * 0.06 : 0.06;
+      ctx.fillStyle = roofReady() ? C.cyan : "#5e6782";
+      ctx.beginPath();
+      ctx.arc(roof.x, roof.y, roof.radius - 8, 0, TAU);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      text(boss.active ? "LIVE BOSS FEED" : "ROOFTOP UPLINK", roof.x, roof.y - roof.radius - 22, 15, roofReady() ? C.cyan : C.muted, "center", 900);
+      if (!roofReady()) {
+        text("30 VIEWERS + 3 COMPONENTS REQUIRED", roof.x, roof.y, 11, C.muted, "center", 800);
+      }
+      ctx.restore();
+    }
+
+    function drawComponent(item) {
+      if (item.collected) return;
+      var pulse = 1 + Math.sin(performance.now() * 0.006 + item.x) * 0.12;
+      ctx.save();
+      ctx.translate(item.x, item.y);
+      ctx.scale(pulse, pulse);
+      ctx.shadowBlur = 28;
+      ctx.shadowColor = item.color;
+      ctx.fillStyle = "rgba(5,8,20,0.92)";
+      ctx.strokeStyle = item.color;
+      ctx.lineWidth = 3;
+      ctx.fillRect(-24, -20, 48, 40);
+      ctx.strokeRect(-24, -20, 48, 40);
+      ctx.fillStyle = item.color;
+      if (item.short === "GPU") {
+        ctx.fillRect(-15, -10, 30, 20);
+        ctx.fillStyle = C.ink;
+        ctx.beginPath(); ctx.arc(-7, 0, 5, 0, TAU); ctx.arc(7, 0, 5, 0, TAU); ctx.fill();
+      } else if (item.short === "PSU") {
+        ctx.fillRect(-14, -12, 28, 24);
+        ctx.fillStyle = C.ink;
+        ctx.beginPath(); ctx.arc(0, 0, 9, 0, TAU); ctx.fill();
+      } else {
+        ctx.fillRect(-5, -15, 10, 30);
+        ctx.strokeStyle = item.color;
+        ctx.beginPath(); ctx.arc(0, -11, 12, 0, TAU); ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      text(item.short, 0, 37, 11, item.color, "center", 900);
+      ctx.restore();
+    }
+
+    function drawHotspot(spot) {
+      if (spot.done) return;
+      var t = performance.now() * 0.004;
+      ctx.save();
+      ctx.translate(spot.x, spot.y);
+      ctx.rotate(t);
+      ctx.strokeStyle = C.pink;
+      ctx.lineWidth = 3;
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = C.pink;
+      ctx.strokeRect(-25, -25, 50, 50);
+      ctx.rotate(-t * 2);
+      ctx.strokeRect(-17, -17, 34, 34);
+      ctx.restore();
+      text("STREAM STUNT", spot.x, spot.y + 42, 10, C.pink, "center", 900);
+    }
+
+    function drawPlayer(p, isActive) {
+      var bob = Math.sin(p.walk) * 2;
+      ctx.save();
+      ctx.translate(Math.round(p.x), Math.round(p.y + bob));
+
+      ctx.fillStyle = "rgba(0,0,0,0.38)";
+      ctx.beginPath();
+      ctx.ellipse(0, 20, 20, 8, 0, 0, TAU);
+      ctx.fill();
+
+      if (isActive) {
+        ctx.strokeStyle = p.accent;
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 16;
+        ctx.shadowColor = p.accent;
+        ctx.beginPath();
+        ctx.arc(0, 2, 29 + Math.sin(performance.now() * 0.008) * 2, 0, TAU);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-13, -5, 26, 29);
+      ctx.fillStyle = "#111729";
+      ctx.fillRect(-12, 20, 9, 14);
+      ctx.fillRect(3, 20, 9, 14);
+
+      if (p.role === "danny") {
+        ctx.fillStyle = "#17131c";
+        ctx.fillRect(-17, -31, 34, 34);
+        ctx.fillRect(-20, -20, 8, 34);
+        ctx.fillRect(12, -20, 8, 34);
+        ctx.fillStyle = "#e7b88d";
+        ctx.fillRect(-12, -29, 24, 22);
+        ctx.fillStyle = "#1c1520";
+        ctx.fillRect(-13, -31, 26, 7);
+        ctx.fillStyle = C.cyan;
+        ctx.fillRect(-8, -20, 5, 3);
+        ctx.fillRect(4, -20, 5, 3);
+
+        ctx.strokeStyle = "#8d9cbe";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(p.facingX * 13, p.facingY * 13);
+        ctx.lineTo(p.facingX * 44, p.facingY * 44);
+        ctx.stroke();
+        ctx.fillStyle = C.pink;
+        ctx.fillRect(p.facingX * 44 - 6, p.facingY * 44 - 6, 12, 12);
+      } else {
+        ctx.fillStyle = "#d7a77c";
+        ctx.beginPath();
+        ctx.arc(0, -20, 14, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "#594031";
+        ctx.fillRect(-11, -18, 22, 9);
+        ctx.fillStyle = "#101722";
+        ctx.fillRect(-8, -24, 5, 3);
+        ctx.fillRect(4, -24, 5, 3);
+
+        ctx.strokeStyle = "#b9c2d6";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(p.facingX * 11, p.facingY * 11);
+        ctx.lineTo(p.facingX * 35, p.facingY * 35);
+        ctx.stroke();
+        ctx.strokeStyle = C.gold;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(p.facingX * 41, p.facingY * 41, 8, -0.9, 1.1);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawEnemy(enemy) {
+      ctx.save();
+      ctx.translate(Math.round(enemy.x), Math.round(enemy.y + Math.sin(enemy.phase) * 2));
+      if (enemy.stunned > 0) {
+        text("*", -13, -enemy.r - 16, 15, C.gold, "center", 900);
+        text("*", 13, -enemy.r - 12, 15, C.gold, "center", 900);
+      }
+      ctx.fillStyle = "rgba(0,0,0,0.36)";
+      ctx.beginPath();
+      ctx.ellipse(0, enemy.r * 0.75, enemy.r, 7, 0, 0, TAU);
+      ctx.fill();
+      ctx.shadowBlur = enemy.hurt > 0 ? 22 : 10;
+      ctx.shadowColor = enemy.color;
+      ctx.fillStyle = enemy.hurt > 0 ? C.white : enemy.color;
+      ctx.strokeStyle = C.ink;
+      ctx.lineWidth = 4;
+
+      if (enemy.kind === "copyright") {
+        ctx.rotate(Math.sin(enemy.phase) * 0.08);
+        ctx.fillRect(-enemy.r, -enemy.r * 0.65, enemy.r * 2, enemy.r * 1.3);
+        ctx.strokeRect(-enemy.r, -enemy.r * 0.65, enemy.r * 2, enemy.r * 1.3);
+        ctx.fillStyle = C.ink;
+        text("©", 0, 0, 18, C.ink, "center", 900);
+      } else if (enemy.kind === "troll") {
+        ctx.beginPath();
+        ctx.arc(0, 0, enemy.r, 0, TAU);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = C.ink;
+        ctx.fillRect(-9, -4, 5, 5);
+        ctx.fillRect(4, -4, 5, 5);
+        ctx.fillRect(-7, 7, 14, 3);
+      } else {
+        ctx.rotate(enemy.phase * 0.15);
+        ctx.fillRect(-enemy.r, -enemy.r, enemy.r * 2, enemy.r * 2);
+        ctx.strokeRect(-enemy.r, -enemy.r, enemy.r * 2, enemy.r * 2);
+        ctx.fillStyle = C.ink;
+        ctx.fillRect(-9, -3, 18, 7);
+        ctx.fillStyle = C.white;
+        ctx.fillRect(2, -2, 5, 5);
+      }
+      ctx.shadowBlur = 0;
+      if (enemy.hp < enemy.maxHp) {
+        ctx.fillStyle = "rgba(0,0,0,0.65)";
+        ctx.fillRect(-20, -enemy.r - 14, 40, 5);
+        ctx.fillStyle = enemy.color;
+        ctx.fillRect(-20, -enemy.r - 14, 40 * clamp(enemy.hp / enemy.maxHp, 0, 1), 5);
+      }
+      ctx.restore();
+    }
+
+    function drawBoss() {
+      if (!boss.active || boss.dead) return;
+      ctx.save();
+      ctx.translate(Math.round(boss.x), Math.round(boss.y));
+      ctx.rotate(boss.angle * 0.7);
+      ctx.shadowBlur = 35;
+      ctx.shadowColor = boss.hurt > 0 ? C.white : C.cyan;
+      ctx.fillStyle = boss.hurt > 0 ? C.white : "#152142";
+      ctx.strokeStyle = C.cyan;
+      ctx.lineWidth = 6;
+      ctx.fillRect(-43, -43, 86, 86);
+      ctx.strokeRect(-43, -43, 86, 86);
+      ctx.rotate(-boss.angle * 1.4);
+      ctx.strokeStyle = C.pink;
+      ctx.strokeRect(-55, -55, 110, 110);
+      ctx.rotate(boss.angle * 0.7);
+      ctx.fillStyle = C.red;
+      ctx.beginPath();
+      ctx.arc(0, 0, 22, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = C.ink;
+      ctx.beginPath();
+      ctx.arc(Math.sin(boss.angle * 3) * 8, 0, 8, 0, TAU);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      for (var i = 0; i < 4; i++) {
+        var a = boss.angle * 2 + i * TAU / 4;
+        ctx.fillStyle = i % 2 ? C.pink : C.cyan;
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * 82, Math.sin(a) * 82, 9, 0, TAU);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawTurret(turret) {
+      ctx.save();
+      ctx.translate(turret.x, turret.y);
+      ctx.fillStyle = "#121a2d";
+      ctx.strokeStyle = C.gold;
+      ctx.lineWidth = 3;
+      ctx.fillRect(-14, -12, 28, 24);
+      ctx.strokeRect(-14, -12, 28, 24);
+      ctx.rotate(turret.angle);
+      ctx.fillStyle = C.cyan;
+      ctx.fillRect(0, -3, 23, 6);
+      ctx.restore();
+      if (turret.flash > 0 && turret.targetX !== undefined) {
+        ctx.strokeStyle = C.cyan;
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = turret.flash / 0.09;
+        ctx.beginPath();
+        ctx.moveTo(turret.x, turret.y);
+        ctx.lineTo(turret.targetX, turret.targetY);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawProjectiles() {
+      projectiles.forEach(function (shot) {
+        ctx.fillStyle = shot.color;
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = shot.color;
+        ctx.beginPath();
+        ctx.arc(shot.x, shot.y, shot.r, 0, TAU);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+    }
+
+    function drawParticles() {
+      particles.forEach(function (particle) {
+        ctx.globalAlpha = clamp(particle.life / particle.maxLife, 0, 1);
+        ctx.fillStyle = particle.color;
+        ctx.fillRect(particle.x - particle.size / 2, particle.y - particle.size / 2, particle.size, particle.size);
+      });
+      ctx.globalAlpha = 1;
+    }
+
+    function drawWorld() {
+      ctx.save();
+      worldTransform();
+      drawGround();
+      drawRoofArena();
+      buildings.forEach(drawBuilding);
+      drawProps();
+      components.forEach(drawComponent);
+      hotspots.forEach(drawHotspot);
+      turrets.forEach(drawTurret);
+      enemies.forEach(drawEnemy);
+      drawBoss();
+      drawProjectiles();
+      drawPlayer(companion(), false);
+      drawPlayer(activePlayer(), true);
+      drawParticles();
+      ctx.restore();
+    }
+
+    function currentObjective() {
+      var partsLeft = components.length - collectedCount();
+      if (partsLeft > 0 && game.viewers < 30) {
+        return "Collect " + partsLeft + " component" + (partsLeft === 1 ? "" : "s") +
+          " and reach 30 viewers";
+      }
+      if (partsLeft > 0) return "Switch to Marco and recover " + partsLeft + " PC component" + (partsLeft === 1 ? "" : "s");
+      if (game.viewers < 30) return "Switch to Danny and build " + (30 - game.viewers) + " more viewers";
+      if (!boss.active) return "Enter the northeast rooftop uplink and press E";
+      if (!boss.dead) return "Defeat The Algorithm";
+      return "Transmission complete";
+    }
+
+    function drawBar(x, y, w, h, ratio, color) {
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      roundRect(x, y, w, h, h / 2);
+      ctx.fill();
+      ctx.fillStyle = color;
+      roundRect(x, y, Math.max(h, w * clamp(ratio, 0, 1)), h, h / 2);
+      ctx.fill();
+    }
+
+    function drawMiniMap() {
+      var x = W - 224;
+      var y = 18;
+      var w = 206;
+      var h = 126;
+      panel(x, y, w, h, 0.82);
+      var mx = x + 12;
+      var my = y + 12;
+      var mw = w - 24;
+      var mh = h - 24;
+      ctx.fillStyle = "#0c1726";
+      ctx.fillRect(mx, my, mw, mh);
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      buildings.forEach(function (b) {
+        ctx.fillStyle = "#26314a";
+        ctx.fillRect(mx + b.x / WORLD_W * mw, my + b.y / WORLD_H * mh, b.w / WORLD_W * mw, b.h / WORLD_H * mh);
+      });
+      components.forEach(function (item) {
+        if (!item.collected) {
+          ctx.fillStyle = item.color;
+          ctx.fillRect(mx + item.x / WORLD_W * mw - 2, my + item.y / WORLD_H * mh - 2, 5, 5);
+        }
+      });
+      hotspots.forEach(function (spot) {
+        if (!spot.done) {
+          ctx.strokeStyle = C.pink;
+          ctx.strokeRect(mx + spot.x / WORLD_W * mw - 2, my + spot.y / WORLD_H * mh - 2, 5, 5);
+        }
+      });
+      ctx.fillStyle = roofReady() ? C.cyan : C.muted;
+      ctx.beginPath();
+      ctx.arc(mx + roof.x / WORLD_W * mw, my + roof.y / WORLD_H * mh, 4, 0, TAU);
+      ctx.fill();
+      var p = activePlayer();
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(mx + p.x / WORLD_W * mw, my + p.y / WORLD_H * mh, 4, 0, TAU);
+      ctx.fill();
+    }
+
+    function drawHUD() {
+      panel(18, 18, 490, 84, 0.88);
+      text("CURRENT OBJECTIVE", 34, 39, 10, C.cyan, "left", 900);
+      text(currentObjective(), 34, 63, 15, C.white, "left", 800);
+      text("PARTS " + collectedCount() + "/3   •   STUNTS " + completedStunts() + "/3", 34, 86, 10, C.muted, "left", 800);
+
+      panel(18, H - 112, 405, 94, 0.9);
+      var p = activePlayer();
+      var other = companion();
+      ctx.fillStyle = p.color;
+      ctx.fillRect(30, H - 98, 7, 67);
+      text(p.name + " / " + p.alias, 52, H - 88, 15, p.color, "left", 900);
+      text(p.role === "danny" ? "SELFIE STICK + AURA BURST" : "WRENCH + SCRAP TURRET", 52, H - 66, 10, C.muted, "left", 800);
+      text("Q", 338, H - 86, 10, C.ink, "center", 900);
+      ctx.fillStyle = C.white;
+      roundRect(326, H - 98, 24, 24, 5);
+      ctx.fill();
+      text("SWITCH", 361, H - 86, 9, C.muted, "left", 800);
+      ctx.fillStyle = other.color;
+      ctx.globalAlpha = 0.65;
+      ctx.fillRect(326, H - 59, 58, 6);
+      ctx.globalAlpha = 1;
+      text(other.name + " FOLLOWING", 52, H - 43, 9, other.color, "left", 800);
+
+      panel(W / 2 - 217, 18, 434, 70, 0.9);
+      text("LIVE", W / 2 - 195, 38, 10, C.red, "left", 900);
+      text(String(game.viewers), W / 2 - 193, 63, 24, C.pink, "left", 900);
+      text("VIEWERS", W / 2 - 146, 63, 9, C.muted, "left", 800);
+      text(game.benchmark.toLocaleString(), W / 2 + 34, 63, 22, C.gold, "left", 900);
+      text("BENCH", W / 2 + 142, 63, 9, C.muted, "left", 800);
+      drawBar(W / 2 - 62, 33, 2, 36, 1, "rgba(255,255,255,0.14)");
+
+      panel(W - 292, H - 91, 274, 73, 0.9);
+      text("TEAM SYNC", W - 276, H - 70, 9, C.muted, "left", 900);
+      text(Math.ceil(game.health) + "%", W - 39, H - 70, 11, game.health < 30 ? C.red : C.green, "right", 900);
+      drawBar(W - 276, H - 55, 238, 12, game.health / 100, game.health < 30 ? C.red : C.green);
+      text("SPACE ATTACK   •   F SPECIAL   •   E INTERACT", W - 276, H - 32, 8, C.muted, "left", 700);
+
+      drawMiniMap();
+
+      if (boss.active && !boss.dead) {
+        panel(W / 2 - 245, H - 65, 490, 42, 0.93);
+        text("THE ALGORITHM", W / 2, H - 52, 10, C.red, "center", 900);
+        drawBar(W / 2 - 215, H - 40, 430, 9, boss.hp / boss.maxHp, C.red);
+      }
+
+      var nearby = nearestInteractable();
+      if (nearby && game.mode === "playing") {
+        var prompt = "PRESS E";
+        if (nearby.type === "component") prompt += activePlayer().role === "marco" ? "  INSTALL " + nearby.item.short : "  SWITCH TO MARCO";
+        if (nearby.type === "hotspot") prompt += activePlayer().role === "danny" ? "  START STREAM STUNT" : "  SWITCH TO DANNY";
+        if (nearby.type === "roof") prompt += "  GO LIVE";
+        panel(W / 2 - 190, H - 132, 380, 34, 0.9);
+        text(prompt, W / 2, H - 115, 10, C.white, "center", 900);
+      }
+
+      if (game.dialogue) {
+        var fade = clamp(game.dialogue.time < 0.4 ? game.dialogue.time / 0.4 : 1, 0, 1);
+        ctx.globalAlpha = fade;
+        panel(W / 2 - 360, H - 203, 720, 60, 0.94);
+        text(game.dialogue.speaker, W / 2 - 338, H - 183, 10, game.dialogue.color, "left", 900);
+        text(game.dialogue.line, W / 2 - 338, H - 160, 12, C.white, "left", 700);
+        ctx.globalAlpha = 1;
+      }
+
+      if (game.bossIntro > 0) {
+        var introAlpha = clamp(Math.min(3.5 - game.bossIntro, game.bossIntro) * 1.8, 0, 1);
+        ctx.fillStyle = "rgba(1,2,8," + (introAlpha * 0.5) + ")";
+        ctx.fillRect(0, 0, W, H);
+        ctx.globalAlpha = introAlpha;
+        text("ENGAGEMENT COLLAPSE DETECTED", W / 2, H / 2 - 30, 14, C.red, "center", 900);
+        text("THE ALGORITHM", W / 2, H / 2 + 18, 46, C.white, "center", 900);
+        ctx.globalAlpha = 1;
+      }
+
+      if (game.paused) {
+        ctx.fillStyle = "rgba(2,4,12,0.72)";
+        ctx.fillRect(0, 0, W, H);
+        text("PAUSED", W / 2, H / 2 - 12, 48, C.white, "center", 900);
+        text("PRESS P TO RETURN TO THE DISASTER", W / 2, H / 2 + 38, 11, C.cyan, "center", 800);
+      }
+
+      if (game.hurtFlash > 0) {
+        ctx.fillStyle = "rgba(255,25,62," + (game.hurtFlash * 0.5) + ")";
+        ctx.fillRect(0, 0, W, H);
+      }
+    }
+
+    function drawMenuBackdrop() {
+      ctx.fillStyle = "#07101d";
+      ctx.fillRect(0, 0, W, H);
+      var t = performance.now() * 0.0003;
+      for (var i = 0; i < 70; i++) {
+        var x = (hash(i * 3.1) * W + t * W * (i % 3 + 1)) % W;
+        var y = hash(i * 7.7) * H;
+        ctx.fillStyle = i % 2 ? "rgba(67,232,255,0.16)" : "rgba(255,77,166,0.13)";
+        ctx.fillRect(x, y, i % 5 === 0 ? 22 : 3, 2);
+      }
+      ctx.strokeStyle = "rgba(67,232,255,0.09)";
+      ctx.lineWidth = 1;
+      for (var gx = -H; gx < W; gx += 55) {
+        ctx.beginPath();
+        ctx.moveTo(gx, H);
+        ctx.lineTo(gx + H, 0);
+        ctx.stroke();
+      }
+    }
+
+    function render() {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      if (game.mode === "menu") {
+        drawMenuBackdrop();
+      } else {
+        drawWorld();
+        drawHUD();
+      }
+    }
+
+    var last = performance.now();
+    var accumulator = 0;
+    function frame(now) {
+      var delta = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      accumulator += delta;
+      var simulationAdvanced = false;
+      while (accumulator >= FIXED_STEP) {
+        update(FIXED_STEP);
+        accumulator -= FIXED_STEP;
+        simulationAdvanced = true;
+      }
+      render();
+      // Keep edge-triggered input queued until a fixed simulation tick consumes it.
+      // This prevents quick taps being lost on high-refresh displays.
+      if (simulationAdvanced) pressed = Object.create(null);
+      requestAnimationFrame(frame);
+    }
+
+    resetWorld();
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>
